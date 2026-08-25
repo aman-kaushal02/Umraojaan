@@ -233,10 +233,10 @@ export const birthdayConfig: BirthdayConfig = {
   reveal: {
     greeting: 'Happy Birthday',
     paragraphs: [
-      'I hope this year brings you all the happiness, laughter and beautiful moments you deserve.',
-      'I hope you get the quiet mornings, the loud nights, the wins you’ve been working towards, and at least one day where absolutely nothing goes wrong.',
-      'Thank you for being the softest, warmest part of my life. For every time you made an ordinary day feel like something worth remembering.',
-      'Today is yours. I just wanted to make sure it started with something made only for you.',
+      'You know it’s a 30-day countdown to your birthday…',
+      'So I tried something new, just to bring a smile to your face.',
+      'I hope this little piece of work of mine does exactly that.',
+      'May Allah bless you with good health and that goofy smile of yours.',
     ],
     cta: 'One more thing',
   },
