@@ -100,8 +100,13 @@ export interface BirthdayConfig {
   };
 
   reveal: {
-    /** Rendered as “Happy Birthday, {name}”. */
+    /** Small line set above her name. */
     greeting: string;
+    /** Optional photograph, revealed as the thing inside the gift box. */
+    photo?: string;
+    photoAlt?: string;
+    /** Handwritten caption under the photograph. */
+    photoCaption?: string;
     /** Revealed paragraph by paragraph. */
     paragraphs: string[];
     cta: string;
@@ -231,7 +236,10 @@ export const birthdayConfig: BirthdayConfig = {
 
   /* ---------------------------------------------------------------- */
   reveal: {
-    greeting: 'Happy Birthday',
+    greeting: 'Thirty days to go',
+    photo: '/memories/bday-box.jpeg',
+    photoAlt: 'The little birthday box, opened early',
+    photoCaption: 'thirty days early',
     paragraphs: [
       'You know it’s a 30-day countdown to your birthday…',
       'So I tried something new, just to bring a smile to your face.',
@@ -245,7 +253,7 @@ export const birthdayConfig: BirthdayConfig = {
   final: {
     question: 'And if I had to choose all over again…',
     answer: 'I’d still choose you.',
-    closing: 'Happy Birthday, my love.',
+    closing: 'Happy almost-birthday, my love.',
     surprise: {
       buttonLabel: 'One last thing…',
       title: 'This part is just for you',

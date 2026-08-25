@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react';
 import AnimatedText from '@/components/AnimatedText';
 import Celebration from '@/components/Celebration';
 import CtaButton from '@/components/CtaButton';
+import SafeImage from '@/components/SafeImage';
 import { EASE_SILK } from '@/animations/motion';
 import { birthdayConfig } from '@/data/config';
 import { useExperience } from '@/hooks/useExperience';
@@ -53,7 +54,7 @@ export function BirthdayReveal() {
   }, [reducedMotion, total]);
 
   return (
-    <section className="scene-frame" aria-label={`Happy birthday, ${name}`}>
+    <section className="scene-frame" aria-label={`A message for ${name}`}>
       <Celebration active={celebrating} />
 
       <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
@@ -114,14 +115,56 @@ export function BirthdayReveal() {
 
         <motion.span
           aria-hidden="true"
-          className="gold-rule relative mt-9 block w-40"
+          className="gold-rule relative mt-8 block w-40"
           initial={{ opacity: 0, scaleX: 0.2 }}
           animate={{ opacity: 1, scaleX: 1 }}
           transition={{ duration: 1.6, delay: 1.5, ease: EASE_SILK }}
         />
 
+        {/* what was inside the box */}
+        {reveal.photo ? (
+          <motion.figure
+            className="relative mt-8"
+            initial={
+              reducedMotion
+                ? { opacity: 0 }
+                : { opacity: 0, y: 34, scale: 0.86, rotate: -7, filter: 'blur(12px)' }
+            }
+            animate={
+              reducedMotion
+                ? { opacity: 1 }
+                : { opacity: 1, y: 0, scale: 1, rotate: -2.5, filter: 'blur(0px)' }
+            }
+            transition={{ duration: reducedMotion ? 0.3 : 1.5, delay: 1.9, ease: EASE_SILK }}
+          >
+            {/* warm halo, as if it's still catching the light from the box */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-7 -z-10 rounded-full opacity-80 blur-2xl"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(247,231,201,0.34) 0%, rgba(238,191,200,0.16) 46%, transparent 74%)',
+              }}
+            />
+
+            <div className="paper paper-fibers w-[8.5rem] rounded-[3px] p-2.5 pb-3 shadow-paper xs:w-[10rem] sm:w-[11.5rem]">
+              <SafeImage
+                src={reveal.photo}
+                alt={reveal.photoAlt ?? `A photograph for ${name}`}
+                priority
+                className="aspect-[4/5] w-full rounded-[2px]"
+              />
+              {reveal.photoCaption ? (
+                <figcaption className="pt-2.5 text-center font-script text-[0.95rem] leading-none text-rose-600/85">
+                  {reveal.photoCaption}
+                </figcaption>
+              ) : null}
+            </div>
+          </motion.figure>
+        ) : null}
+
         {/* the message */}
-        <div className="relative mt-9 flex w-full max-w-[34rem] flex-col gap-5">
+        <div className="relative mt-8 flex w-full max-w-[34rem] flex-col gap-5">
           {schedule.map(({ paragraph, start }, index) => (
             <AnimatedText
               key={index}

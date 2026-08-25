@@ -49,8 +49,15 @@ Drop images into `public/memories/` and point each memory at them:
 { chapter: 'Chapter 01', title: 'The Beginning', image: '/memories/first-day.jpg', alt: '…' }
 ```
 
-A missing or misspelled path shows a soft placeholder frame instead of a broken
-image — one absent photo never breaks the page.
+The reveal scene takes one too — it appears as the thing inside the gift box:
+
+```ts
+reveal: { photo: '/memories/bday-box.jpeg', photoAlt: '…', photoCaption: 'thirty days early' }
+```
+
+Both are framed as 4:5 polaroids and centre-cropped, so portrait photos work
+best. A missing or misspelled path shows a soft placeholder frame instead of a
+broken image — one absent photo never breaks the page.
 
 Use images around **1000px on the long edge**. They are displayed at roughly
 320×400, so anything larger is wasted bytes.
