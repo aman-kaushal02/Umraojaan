@@ -57,7 +57,6 @@ export function useAudioPlayer({
     audio.loop = true;
     audio.preload = 'auto';
     audio.volume = 0;
-    audio.crossOrigin = 'anonymous';
     audioRef.current = audio;
 
     const onReady = () => setAvailable(true);
@@ -136,7 +135,82 @@ export function useAudioPlayer({
     rampTo(0, () => audio.pause());
   }, [rampTo]);
 
-  /* ---- gesture-gated autostart ------------------------------------- */
+  /* ---- attempt 1: play on open ------------------------------------- *
+   * Some contexts genuinely allow this — a returning visitor, a desktop
+   * browser with media engagement history, an installed PWA. We try, and if
+   * the promise rejects we stay silent and wait for her first tap. The flag
+   * is only burned on success, so the gesture path still works.
+   * ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!available || !autoStart || unlocked || autoStarted.current) return;
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    let cancelled = false;
+    const attempt = audio.play();
+
+    if (attempt && typeof attempt.then === 'function') {
+      attempt
+        .then(() => {
+          if (cancelled) return;
+          autoStarted.current = true;
+          rampTo(muted ? 0 : volume);
+        })
+        .catch(() => {
+          /* Blocked by the autoplay policy — expected, not an error. */
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [autoStart, available, muted, rampTo, unlocked, volume]);
+
+  /* ---- attempt 2: inside the first real gesture --------------------- *
+   * This has to call `play()` synchronously, in the same call stack as a
+   * trusted event. iOS Safari only honours playback started that way — a
+   * React effect that runs a tick later is already too late for it.
+   * ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!available || !autoStart || autoStarted.current) return;
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const unlock = (event: Event) => {
+      if (!event.isTrusted || autoStarted.current) return;
+
+      autoStarted.current = true;
+      detach();
+
+      const attempt = audio.play();
+      if (attempt && typeof attempt.catch === 'function') {
+        attempt.catch(() => {
+          /* Still refused: leave it to her to press play. */
+          autoStarted.current = false;
+          setPlaying(false);
+        });
+      }
+      rampTo(muted ? 0 : volume);
+    };
+
+    const events: (keyof DocumentEventMap)[] = [
+      'pointerdown',
+      'touchend',
+      'keydown',
+      'click',
+    ];
+
+    function detach() {
+      events.forEach((type) => document.removeEventListener(type, unlock, true));
+    }
+
+    events.forEach((type) => document.addEventListener(type, unlock, true));
+    return detach;
+  }, [autoStart, available, muted, rampTo, volume]);
+
+  /* ---- attempt 3: safety net, if the listener above never saw a gesture */
   useEffect(() => {
     if (!available || !autoStart || !unlocked || autoStarted.current) return;
     autoStarted.current = true;

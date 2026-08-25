@@ -57,15 +57,17 @@ Use images around **1000px on the long edge**. They are displayed at roughly
 
 ### Music
 
-Put a track at `public/music/our-song.mp3` and set:
+The soundtrack lives at `public/music/our-song.mp3` and loops forever:
 
 ```ts
 music: { src: '/music/our-song.mp3', title: 'Our song', volume: 0.42, startAfterFirstInteraction: true }
 ```
 
-It starts only **after her first tap** (browsers block anything earlier) and can
-be paused or muted from the floating control. Leave `src: ''` and the control
-never appears.
+Playback is attempted three ways, in order: straight away on load, then
+synchronously inside her first tap (the only thing iOS Safari accepts), then as
+a fallback once the app registers any interaction. In practice it starts the
+moment she taps **Open it**, fades in over ~1.4s, and can be paused or muted
+from the floating control. Leave `src: ''` and the control never appears.
 
 ### The final surprise
 

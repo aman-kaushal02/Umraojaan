@@ -259,8 +259,7 @@ export const birthdayConfig: BirthdayConfig = {
 
   /* ---------------------------------------------------------------- */
   music: {
-    /* Add a song at `public/music/our-song.mp3` and set the path here. */
-    src: '',
+    src: '/music/our-song.mp3',
     title: 'Our song',
     volume: 0.42,
     startAfterFirstInteraction: true,
