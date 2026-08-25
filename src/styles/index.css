@@ -1,0 +1,280 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ *
+ * Design tokens
+ * ------------------------------------------------------------------ */
+:root {
+  --ivory: #fbf5ec;
+  --blush: #eebfc8;
+  --rose: #ad5b6b;
+  --burgundy: #7a1130;
+  --champagne: #e0be86;
+  --ink: #0d0611;
+
+  /* Ambient scene lighting, animated by the experience orchestrator. */
+  --amb-1: #1a0a16;
+  --amb-2: #0d0611;
+  --amb-3: #2a0f22;
+  --amb-glow: 0.5;
+
+  /* Fallback for browsers without dvh. */
+  --app-height: 100vh;
+}
+
+/* ------------------------------------------------------------------ *
+ * Pre-hydration shell (lives in index.html)
+ * ------------------------------------------------------------------ */
+.boot-shell {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 42%, #2a0f22 0%, #12070f 45%, #070409 100%);
+}
+.boot-shell__glow {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 40vmin;
+  height: 40vmin;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(224, 190, 134, 0.22), transparent 70%);
+  filter: blur(14px);
+  animation: boot-breathe 2.6s ease-in-out infinite;
+}
+@keyframes boot-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.94);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--ink);
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    color: var(--ivory);
+    font-family: Jost, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  /* The experience owns the viewport; only designated scenes scroll. */
+  body[data-lock-scroll='true'] {
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    line-height: 1.12;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  button {
+    font-family: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Visible, elegant focus ring for keyboard users. */
+  :focus-visible {
+    outline: 2px solid rgba(238, 191, 200, 0.9);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(224, 190, 134, 0.28);
+    color: #fffdf9;
+  }
+
+  ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(224, 190, 134, 0.22);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(224, 190, 134, 0.4);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Components / utilities
+ * ------------------------------------------------------------------ */
+@layer components {
+  .scene-frame {
+    position: relative;
+    width: 100%;
+    min-height: var(--app-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-left: max(1.25rem, env(safe-area-inset-left));
+    padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-top: max(2.25rem, env(safe-area-inset-top));
+    padding-bottom: max(2.25rem, env(safe-area-inset-bottom));
+  }
+
+  /* Warm handmade paper. Built from layered gradients — no image payload. */
+  .paper {
+    background-color: #fbf5ec;
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(214, 176, 138, 0.16), transparent 42%),
+      radial-gradient(circle at 84% 84%, rgba(173, 91, 107, 0.12), transparent 46%),
+      linear-gradient(174deg, #fffdf9 0%, #f8f0e3 52%, #f0e4d1 100%);
+    color: #3d2430;
+  }
+
+  /* A single soft diagonal weave. Two crossing sets read as graph paper. */
+  .paper-fibers {
+    background-image: repeating-linear-gradient(
+      118deg,
+      rgba(122, 17, 48, 0.016) 0px,
+      rgba(122, 17, 48, 0.016) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  }
+
+  .gold-rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(224, 190, 134, 0.55) 22%,
+      rgba(247, 231, 201, 0.9) 50%,
+      rgba(224, 190, 134, 0.55) 78%,
+      transparent
+    );
+  }
+
+  .glass-pill {
+    background: rgba(13, 6, 17, 0.5);
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    border: 1px solid rgba(247, 231, 201, 0.16);
+  }
+
+  .kicker {
+    font-size: 0.62rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+}
+
+@layer utilities {
+  .text-shadow-soft {
+    text-shadow: 0 1px 24px rgba(0, 0, 0, 0.45);
+  }
+  .text-glow {
+    text-shadow:
+      0 0 22px rgba(247, 231, 201, 0.32),
+      0 0 60px rgba(238, 191, 200, 0.18);
+  }
+  /**
+   * Hints the compositor without touching `transform` — writing a transform
+   * here would silently override Tailwind's translate utilities on the same
+   * element (and did, once, which is why this comment exists).
+   */
+  .gpu {
+    will-change: transform, opacity;
+  }
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Reduced motion — keep the story, drop the movement
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .boot-shell__glow {
+    animation: none;
+    opacity: 0.7;
+  }
+}
