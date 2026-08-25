@@ -60,14 +60,27 @@ Use images around **1000px on the long edge**. They are displayed at roughly
 The soundtrack lives at `public/music/our-song.mp3` and loops forever:
 
 ```ts
-music: { src: '/music/our-song.mp3', title: 'Our song', volume: 0.42, startAfterFirstInteraction: true }
+music: { src: '/music/our-song.mp3', title: 'Our song', volume: 0.42, autoplay: true }
 ```
 
-Playback is attempted three ways, in order: straight away on load, then
-synchronously inside her first tap (the only thing iOS Safari accepts), then as
-a fallback once the app registers any interaction. In practice it starts the
-moment she taps **Open it**, fades in over ~1.4s, and can be paused or muted
-from the floating control. Leave `src: ''` and the control never appears.
+**On autoplay.** No browser permits audible autoplay on a cold visit — Chrome
+gates it behind its Media Engagement Index, Safari behind prior interaction with
+the site, iOS refuses outright. There is no way around this from code, so the
+player runs three stages:
+
+1. Ask for sound the instant the file is playable. For a returning visitor, or a
+   desktop browser that already trusts the domain, the music is simply playing
+   before she touches anything.
+2. If refused, start the track **muted** — which every browser allows. The audio
+   is decoded and rolling, so there's no gap later.
+3. On her first gesture, unmute, rewind to the top so she doesn't lose the
+   opening bars, and fade in over ~1.4s. This runs inside the event's own call
+   stack, the only thing iOS Safari accepts.
+
+Since the experience opens on a full-screen **Open it** button, stage 3 lands
+within a few seconds and is indistinguishable from autoplay. Set
+`autoplay: false` to leave it silent until she presses play, or `src: ''` to
+remove the control entirely.
 
 ### The final surprise
 

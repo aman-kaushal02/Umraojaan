@@ -5,9 +5,9 @@ interface AudioOptions {
   src: string;
   /** Target volume, 0–1. */
   volume?: number;
-  /** Begin playing as soon as `unlocked` flips true. */
-  autoStart?: boolean;
-  /** True once the user has interacted — browsers require this before audio. */
+  /** Start as early as the browser allows. */
+  autoplay?: boolean;
+  /** True once the app has seen any interaction. Used as a last-resort trigger. */
   unlocked?: boolean;
   /** Fade duration in ms when starting/stopping. */
   fade?: number;
@@ -16,6 +16,7 @@ interface AudioOptions {
 export interface AudioPlayer {
   /** The track exists and is playable. False when missing or unsupported. */
   available: boolean;
+  /** Audibly playing. Silent pre-rolling does not count. */
   playing: boolean;
   muted: boolean;
   toggle: () => void;
@@ -23,26 +24,39 @@ export interface AudioPlayer {
 }
 
 /**
- * Background music that behaves.
+ * Background music that starts as early as the browser will let it.
  *
- * - Never touches `play()` before a real user gesture.
- * - Fades in and out instead of clipping.
- * - If the file is missing or the codec is unsupported, `available` stays
- *   false and the UI simply hides the control. Nothing throws.
+ * Audible autoplay on a cold page load is blocked everywhere — Chrome gates it
+ * behind its Media Engagement Index, Safari behind prior interaction with the
+ * site, and iOS refuses outright. So this runs a three-stage strategy:
+ *
+ *   1. Ask for audible playback immediately. On a returning visitor, or a
+ *      desktop browser that already trusts the site, this simply works and the
+ *      music is playing before she has touched anything.
+ *   2. If refused, start the track *muted* — which every browser does allow.
+ *      The pipeline is live and the audio decoded, so there is no gap later.
+ *   3. On the first trusted gesture, unmute, rewind to the top so she hears it
+ *      from the beginning, and fade in. This happens inside the event's own
+ *      call stack, which is the only thing iOS Safari accepts.
+ *
+ * A missing file or unsupported codec leaves `available` false and the UI
+ * hides the control entirely. Nothing throws.
  */
 export function useAudioPlayer({
   src,
   volume = 0.4,
-  autoStart = true,
+  autoplay = true,
   unlocked = false,
   fade = 1400,
 }: AudioOptions): AudioPlayer {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fadeFrame = useRef(0);
-  const autoStarted = useRef(false);
+  /** True once audible playback has been achieved (or explicitly requested). */
+  const startedRef = useRef(false);
 
   const [available, setAvailable] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [rawPlaying, setRawPlaying] = useState(false);
+  const [priming, setPriming] = useState(false);
   const [muted, setMuted] = useState(false);
 
   /* ---- element lifecycle ------------------------------------------- */
@@ -56,16 +70,17 @@ export function useAudioPlayer({
     audio.src = src;
     audio.loop = true;
     audio.preload = 'auto';
+    audio.autoplay = autoplay;
     audio.volume = 0;
     audioRef.current = audio;
 
     const onReady = () => setAvailable(true);
     const onError = () => {
       setAvailable(false);
-      setPlaying(false);
+      setRawPlaying(false);
     };
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
+    const onPlay = () => setRawPlaying(true);
+    const onPause = () => setRawPlaying(false);
 
     audio.addEventListener('canplay', onReady);
     audio.addEventListener('loadeddata', onReady);
@@ -83,9 +98,10 @@ export function useAudioPlayer({
       audio.pause();
       audio.src = '';
       audioRef.current = null;
-      autoStarted.current = false;
+      startedRef.current = false;
+      setPriming(false);
     };
-  }, [src]);
+  }, [autoplay, src]);
 
   /* ---- volume ramp ------------------------------------------------- */
   const rampTo = useCallback(
@@ -117,17 +133,35 @@ export function useAudioPlayer({
     [fade],
   );
 
-  const start = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  /** Go audible from the top of the track. Safe to call inside a gesture. */
+  const startAudible = useCallback(
+    ({ rewind }: { rewind: boolean }) => {
+      const audio = audioRef.current;
+      if (!audio) return;
 
-    const attempt = audio.play();
-    if (attempt && typeof attempt.catch === 'function') {
-      /* Blocked autoplay is expected, not an error worth surfacing. */
-      attempt.catch(() => setPlaying(false));
-    }
-    rampTo(muted ? 0 : volume);
-  }, [muted, rampTo, volume]);
+      startedRef.current = true;
+      setPriming(false);
+      audio.muted = false;
+      if (rewind) {
+        try {
+          audio.currentTime = 0;
+        } catch {
+          /* Seeking before metadata is ready — harmless, it's already at 0. */
+        }
+      }
+      audio.volume = 0;
+
+      const attempt = audio.play();
+      if (attempt && typeof attempt.catch === 'function') {
+        attempt.catch(() => {
+          startedRef.current = false;
+          setRawPlaying(false);
+        });
+      }
+      rampTo(muted ? 0 : volume);
+    },
+    [muted, rampTo, volume],
+  );
 
   const stop = useCallback(() => {
     const audio = audioRef.current;
@@ -135,65 +169,55 @@ export function useAudioPlayer({
     rampTo(0, () => audio.pause());
   }, [rampTo]);
 
-  /* ---- attempt 1: play on open ------------------------------------- *
-   * Some contexts genuinely allow this — a returning visitor, a desktop
-   * browser with media engagement history, an installed PWA. We try, and if
-   * the promise rejects we stay silent and wait for her first tap. The flag
-   * is only burned on success, so the gesture path still works.
-   * ------------------------------------------------------------------ */
+  /* ---- stage 1 & 2: the moment the file is playable ----------------- */
   useEffect(() => {
-    if (!available || !autoStart || unlocked || autoStarted.current) return;
+    if (!available || !autoplay || startedRef.current) return;
 
     const audio = audioRef.current;
     if (!audio) return;
 
     let cancelled = false;
+
+    /* Stage 1 — ask for sound outright. */
+    audio.muted = false;
+    audio.volume = 0;
     const attempt = audio.play();
 
     if (attempt && typeof attempt.then === 'function') {
       attempt
         .then(() => {
           if (cancelled) return;
-          autoStarted.current = true;
+          startedRef.current = true;
+          setPriming(false);
           rampTo(muted ? 0 : volume);
         })
         .catch(() => {
-          /* Blocked by the autoplay policy — expected, not an error. */
+          if (cancelled) return;
+
+          /* Stage 2 — refused. Roll it silently so it's warm and decoded. */
+          audio.muted = true;
+          audio.volume = muted ? 0 : volume;
+          const silent = audio.play();
+          if (silent && typeof silent.then === 'function') {
+            silent
+              .then(() => {
+                if (!cancelled) setPriming(true);
+              })
+              .catch(() => {
+                /* Even muted playback refused. Her first tap will do it. */
+              });
+          }
         });
     }
 
     return () => {
       cancelled = true;
     };
-  }, [autoStart, available, muted, rampTo, unlocked, volume]);
+  }, [autoplay, available, muted, rampTo, volume]);
 
-  /* ---- attempt 2: inside the first real gesture --------------------- *
-   * This has to call `play()` synchronously, in the same call stack as a
-   * trusted event. iOS Safari only honours playback started that way — a
-   * React effect that runs a tick later is already too late for it.
-   * ------------------------------------------------------------------ */
+  /* ---- stage 3: the first trusted gesture --------------------------- */
   useEffect(() => {
-    if (!available || !autoStart || autoStarted.current) return;
-
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const unlock = (event: Event) => {
-      if (!event.isTrusted || autoStarted.current) return;
-
-      autoStarted.current = true;
-      detach();
-
-      const attempt = audio.play();
-      if (attempt && typeof attempt.catch === 'function') {
-        attempt.catch(() => {
-          /* Still refused: leave it to her to press play. */
-          autoStarted.current = false;
-          setPlaying(false);
-        });
-      }
-      rampTo(muted ? 0 : volume);
-    };
+    if (!available || !autoplay || startedRef.current) return;
 
     const events: (keyof DocumentEventMap)[] = [
       'pointerdown',
@@ -202,20 +226,26 @@ export function useAudioPlayer({
       'click',
     ];
 
+    const unlock = (event: Event) => {
+      if (!event.isTrusted || startedRef.current) return;
+      detach();
+      /* Rewind, so a silent pre-roll doesn't cost her the opening bars. */
+      startAudible({ rewind: true });
+    };
+
     function detach() {
       events.forEach((type) => document.removeEventListener(type, unlock, true));
     }
 
     events.forEach((type) => document.addEventListener(type, unlock, true));
     return detach;
-  }, [autoStart, available, muted, rampTo, volume]);
+  }, [autoplay, available, startAudible]);
 
-  /* ---- attempt 3: safety net, if the listener above never saw a gesture */
+  /* ---- last resort: the app reported an interaction we didn't see ---- */
   useEffect(() => {
-    if (!available || !autoStart || !unlocked || autoStarted.current) return;
-    autoStarted.current = true;
-    start();
-  }, [autoStart, available, start, unlocked]);
+    if (!available || !autoplay || !unlocked || startedRef.current) return;
+    startAudible({ rewind: true });
+  }, [autoplay, available, startAudible, unlocked]);
 
   /* ---- pause while the tab is hidden (battery + politeness) --------- */
   useEffect(() => {
@@ -238,13 +268,16 @@ export function useAudioPlayer({
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
+  const playing = rawPlaying && !priming;
+
   const toggle = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    autoStarted.current = true;
-    if (audio.paused) start();
+
+    /* Silently pre-rolling counts as "not playing", so this makes it audible. */
+    if (audio.paused || priming) startAudible({ rewind: priming });
     else stop();
-  }, [start, stop]);
+  }, [priming, startAudible, stop]);
 
   const toggleMute = useCallback(() => {
     setMuted((prev) => {

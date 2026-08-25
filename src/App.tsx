@@ -45,7 +45,7 @@ export function App() {
   const player = useAudioPlayer({
     src: birthdayConfig.music.src,
     volume: birthdayConfig.music.volume,
-    autoStart: birthdayConfig.music.startAfterFirstInteraction,
+    autoplay: birthdayConfig.music.autoplay,
     unlocked: hasInteracted,
   });
 

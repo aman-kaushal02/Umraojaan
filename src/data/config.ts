@@ -124,10 +124,14 @@ export interface BirthdayConfig {
     /** 0 – 1 */
     volume: number;
     /**
-     * Start the music automatically after her FIRST tap/click.
-     * Never before — browsers block it and it feels intrusive.
+     * Start the track as early as the browser allows.
+     *
+     * Audible autoplay on a cold visit is blocked by every modern browser, so
+     * the player asks for sound immediately, falls back to rolling the track
+     * muted, and goes audible from the top on the first gesture. Set false to
+     * leave it silent until she presses play herself.
      */
-    startAfterFirstInteraction: boolean;
+    autoplay: boolean;
   };
 }
 
@@ -262,7 +266,7 @@ export const birthdayConfig: BirthdayConfig = {
     src: '/music/our-song.mp3',
     title: 'Our song',
     volume: 0.42,
-    startAfterFirstInteraction: true,
+    autoplay: true,
   },
 };
 
