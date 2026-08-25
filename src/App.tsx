@@ -16,8 +16,8 @@ import MemoryScene from '@/scenes/MemoryScene';
 import { birthdayConfig } from '@/data/config';
 import { sceneLabels, type SceneId } from '@/data/scenes';
 import { useAppHeight } from '@/hooks/useAppHeight';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useExperience } from '@/hooks/useExperience';
+import { MusicProvider } from '@/hooks/useMusic';
 
 const SCENES: Record<SceneId, ComponentType> = {
   intro: IntroScene,
@@ -37,17 +37,10 @@ const SCENES: Record<SceneId, ComponentType> = {
  * Nothing here knows anything personal; all of that lives in `data/config.ts`.
  */
 export function App() {
-  const { scene, hasInteracted } = useExperience();
+  const { scene } = useExperience();
   const [booted, setBooted] = useState(false);
 
   useAppHeight();
-
-  const player = useAudioPlayer({
-    src: birthdayConfig.music.src,
-    volume: birthdayConfig.music.volume,
-    autoplay: birthdayConfig.music.autoplay,
-    unlocked: hasInteracted,
-  });
 
   /* Lift the curtain one frame after mount, so fonts and layout settle first. */
   useEffect(() => {
@@ -63,12 +56,15 @@ export function App() {
       <ParticleBackground />
       <CursorGlow />
 
-      <SceneTransition>
-        <Scene />
-      </SceneTransition>
+      <MusicProvider>
+        <SceneTransition>
+          <Scene />
+        </SceneTransition>
+
+        <MusicController title={birthdayConfig.music.title} />
+      </MusicProvider>
 
       <ProgressTrail />
-      <MusicController player={player} title={birthdayConfig.music.title} />
 
       {/* Announce each chapter to assistive tech without showing anything. */}
       <p aria-live="polite" className="sr-only">

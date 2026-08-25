@@ -1,10 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Music2, Pause, Volume2, VolumeX } from 'lucide-react';
 import { EASE_SILK } from '@/animations/motion';
-import type { AudioPlayer } from '@/hooks/useAudioPlayer';
+import { useMusic } from '@/hooks/useMusic';
 
 interface MusicControllerProps {
-  player: AudioPlayer;
   /** Track name, surfaced in the accessible label. */
   title: string;
 }
@@ -15,8 +14,8 @@ interface MusicControllerProps {
  * Renders nothing at all when no track is configured or the file can't be
  * played, so a missing MP3 leaves no dead button behind.
  */
-export function MusicController({ player, title }: MusicControllerProps) {
-  const { available, playing, muted, toggle, toggleMute } = player;
+export function MusicController({ title }: MusicControllerProps) {
+  const { available, playing, muted, toggle, toggleMute } = useMusic();
 
   return (
     <AnimatePresence>

@@ -16,9 +16,13 @@ interface AudioOptions {
 export interface AudioPlayer {
   /** The track exists and is playable. False when missing or unsupported. */
   available: boolean;
-  /** Audibly playing. Silent pre-rolling does not count. */
   playing: boolean;
   muted: boolean;
+  /**
+   * Begin playback. Call this synchronously from a real click handler — that
+   * is the only thing iOS Safari reliably accepts. No-op if already playing.
+   */
+  start: () => void;
   toggle: () => void;
   toggleMute: () => void;
 }
@@ -28,19 +32,24 @@ export interface AudioPlayer {
  *
  * Audible autoplay on a cold page load is blocked everywhere — Chrome gates it
  * behind its Media Engagement Index, Safari behind prior interaction with the
- * site, and iOS refuses outright. So this runs a three-stage strategy:
+ * site, and iOS refuses outright. So playback is attempted in three ways:
  *
- *   1. Ask for audible playback immediately. On a returning visitor, or a
- *      desktop browser that already trusts the site, this simply works and the
- *      music is playing before she has touched anything.
- *   2. If refused, start the track *muted* — which every browser does allow.
- *      The pipeline is live and the audio decoded, so there is no gap later.
- *   3. On the first trusted gesture, unmute, rewind to the top so she hears it
- *      from the beginning, and fade in. This happens inside the event's own
- *      call stack, which is the only thing iOS Safari accepts.
+ *   1. Ask outright when the file becomes playable. On a returning visitor, or
+ *      a desktop browser that already trusts the site, the music is playing
+ *      before she has touched anything.
+ *   2. `start()`, called straight from the opening button's click handler.
+ *      This is the dependable path on a phone.
+ *   3. A document-level fallback listening for the first *completed* gesture.
  *
- * A missing file or unsupported codec leaves `available` false and the UI
- * hides the control entirely. Nothing throws.
+ * Two hard-won details are load-bearing here. The fallback listens for
+ * `touchend`/`click`/`keydown` and deliberately NOT `pointerdown`: iOS grants
+ * user activation only once a gesture completes, so reacting to pointerdown
+ * gets the play attempt refused. And the listeners are only detached once
+ * playback actually succeeds — detaching on the first attempt would throw away
+ * the later events that would have worked.
+ *
+ * A missing file or unsupported codec leaves `available` false and the UI hides
+ * the control entirely. Nothing throws.
  */
 export function useAudioPlayer({
   src,
@@ -55,8 +64,7 @@ export function useAudioPlayer({
   const startedRef = useRef(false);
 
   const [available, setAvailable] = useState(false);
-  const [rawPlaying, setRawPlaying] = useState(false);
-  const [priming, setPriming] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
 
   /* ---- element lifecycle ------------------------------------------- */
@@ -77,10 +85,10 @@ export function useAudioPlayer({
     const onReady = () => setAvailable(true);
     const onError = () => {
       setAvailable(false);
-      setRawPlaying(false);
+      setPlaying(false);
     };
-    const onPlay = () => setRawPlaying(true);
-    const onPause = () => setRawPlaying(false);
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
 
     audio.addEventListener('canplay', onReady);
     audio.addEventListener('loadeddata', onReady);
@@ -99,7 +107,6 @@ export function useAudioPlayer({
       audio.src = '';
       audioRef.current = null;
       startedRef.current = false;
-      setPriming(false);
     };
   }, [autoplay, src]);
 
@@ -133,35 +140,44 @@ export function useAudioPlayer({
     [fade],
   );
 
-  /** Go audible from the top of the track. Safe to call inside a gesture. */
-  const startAudible = useCallback(
-    ({ rewind }: { rewind: boolean }) => {
-      const audio = audioRef.current;
-      if (!audio) return;
+  /**
+   * Go audible. Resolves true only if the browser actually allowed it, which
+   * is what lets callers decide whether to keep waiting for a better moment.
+   */
+  const attemptPlay = useCallback((): Promise<boolean> => {
+    const audio = audioRef.current;
+    if (!audio) return Promise.resolve(false);
+    if (!audio.paused) return Promise.resolve(true);
 
+    audio.muted = false;
+    /* iOS ignores volume assignment entirely, so this fade is a desktop nicety. */
+    audio.volume = 0;
+
+    const attempt = audio.play();
+
+    if (!attempt || typeof attempt.then !== 'function') {
+      /* Ancient browsers return void. Assume it worked and ramp anyway. */
       startedRef.current = true;
-      setPriming(false);
-      audio.muted = false;
-      if (rewind) {
-        try {
-          audio.currentTime = 0;
-        } catch {
-          /* Seeking before metadata is ready — harmless, it's already at 0. */
-        }
-      }
-      audio.volume = 0;
-
-      const attempt = audio.play();
-      if (attempt && typeof attempt.catch === 'function') {
-        attempt.catch(() => {
-          startedRef.current = false;
-          setRawPlaying(false);
-        });
-      }
       rampTo(muted ? 0 : volume);
-    },
-    [muted, rampTo, volume],
-  );
+      return Promise.resolve(true);
+    }
+
+    return attempt
+      .then(() => {
+        startedRef.current = true;
+        rampTo(muted ? 0 : volume);
+        return true;
+      })
+      .catch(() => {
+        setPlaying(false);
+        return false;
+      });
+  }, [muted, rampTo, volume]);
+
+  /** Imperative entry point for click handlers. */
+  const start = useCallback(() => {
+    void attemptPlay();
+  }, [attemptPlay]);
 
   const stop = useCallback(() => {
     const audio = audioRef.current;
@@ -169,68 +185,30 @@ export function useAudioPlayer({
     rampTo(0, () => audio.pause());
   }, [rampTo]);
 
-  /* ---- stage 1 & 2: the moment the file is playable ----------------- */
+  /* ---- 1: ask outright, the moment the file is playable ------------- */
   useEffect(() => {
     if (!available || !autoplay || startedRef.current) return;
+    void attemptPlay();
+  }, [attemptPlay, autoplay, available]);
 
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    let cancelled = false;
-
-    /* Stage 1 — ask for sound outright. */
-    audio.muted = false;
-    audio.volume = 0;
-    const attempt = audio.play();
-
-    if (attempt && typeof attempt.then === 'function') {
-      attempt
-        .then(() => {
-          if (cancelled) return;
-          startedRef.current = true;
-          setPriming(false);
-          rampTo(muted ? 0 : volume);
-        })
-        .catch(() => {
-          if (cancelled) return;
-
-          /* Stage 2 — refused. Roll it silently so it's warm and decoded. */
-          audio.muted = true;
-          audio.volume = muted ? 0 : volume;
-          const silent = audio.play();
-          if (silent && typeof silent.then === 'function') {
-            silent
-              .then(() => {
-                if (!cancelled) setPriming(true);
-              })
-              .catch(() => {
-                /* Even muted playback refused. Her first tap will do it. */
-              });
-          }
-        });
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [autoplay, available, muted, rampTo, volume]);
-
-  /* ---- stage 3: the first trusted gesture --------------------------- */
+  /* ---- 3: fall back to the first *completed* gesture ---------------- */
   useEffect(() => {
-    if (!available || !autoplay || startedRef.current) return;
+    if (!available || !autoplay) return;
 
-    const events: (keyof DocumentEventMap)[] = [
-      'pointerdown',
-      'touchend',
-      'keydown',
-      'click',
-    ];
+    /**
+     * No `pointerdown` here, on purpose. iOS grants user activation only when
+     * a gesture completes, so a pointerdown attempt is refused — and the old
+     * version then unbound itself before the usable `touchend` ever arrived.
+     */
+    const events: (keyof DocumentEventMap)[] = ['touchend', 'click', 'keydown'];
 
     const unlock = (event: Event) => {
       if (!event.isTrusted || startedRef.current) return;
-      detach();
-      /* Rewind, so a silent pre-roll doesn't cost her the opening bars. */
-      startAudible({ rewind: true });
+
+      /* Only stop listening once playback has genuinely begun. */
+      void attemptPlay().then((ok) => {
+        if (ok) detach();
+      });
     };
 
     function detach() {
@@ -239,13 +217,13 @@ export function useAudioPlayer({
 
     events.forEach((type) => document.addEventListener(type, unlock, true));
     return detach;
-  }, [autoplay, available, startAudible]);
+  }, [attemptPlay, autoplay, available]);
 
   /* ---- last resort: the app reported an interaction we didn't see ---- */
   useEffect(() => {
     if (!available || !autoplay || !unlocked || startedRef.current) return;
-    startAudible({ rewind: true });
-  }, [autoplay, available, startAudible, unlocked]);
+    void attemptPlay();
+  }, [attemptPlay, autoplay, available, unlocked]);
 
   /* ---- pause while the tab is hidden (battery + politeness) --------- */
   useEffect(() => {
@@ -268,16 +246,12 @@ export function useAudioPlayer({
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  const playing = rawPlaying && !priming;
-
   const toggle = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
-    /* Silently pre-rolling counts as "not playing", so this makes it audible. */
-    if (audio.paused || priming) startAudible({ rewind: priming });
+    if (audio.paused) void attemptPlay();
     else stop();
-  }, [priming, startAudible, stop]);
+  }, [attemptPlay, stop]);
 
   const toggleMute = useCallback(() => {
     setMuted((prev) => {
@@ -287,5 +261,5 @@ export function useAudioPlayer({
     });
   }, [rampTo, volume]);
 
-  return { available, playing, muted, toggle, toggleMute };
+  return { available, playing, muted, start, toggle, toggleMute };
 }

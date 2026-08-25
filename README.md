@@ -65,21 +65,26 @@ music: { src: '/music/our-song.mp3', title: 'Our song', volume: 0.42, autoplay: 
 
 **On autoplay.** No browser permits audible autoplay on a cold visit — Chrome
 gates it behind its Media Engagement Index, Safari behind prior interaction with
-the site, iOS refuses outright. There is no way around this from code, so the
-player runs three stages:
+the domain, iOS refuses outright. There is no way around this from code, so
+playback is attempted three ways:
 
-1. Ask for sound the instant the file is playable. For a returning visitor, or a
-   desktop browser that already trusts the domain, the music is simply playing
+1. **Straight away**, the instant the file is playable. For a returning visitor,
+   or a desktop browser that already trusts the domain, the music is playing
    before she touches anything.
-2. If refused, start the track **muted** — which every browser allows. The audio
-   is decoded and rolling, so there's no gap later.
-3. On her first gesture, unmute, rewind to the top so she doesn't lose the
-   opening bars, and fade in over ~1.4s. This runs inside the event's own call
-   stack, the only thing iOS Safari accepts.
+2. **From the `Open it` button's own click handler** (`IntroScene`). This is the
+   dependable path on a phone, and in practice the one that fires.
+3. **A document-level fallback** listening for the first completed gesture.
 
-Since the experience opens on a full-screen **Open it** button, stage 3 lands
-within a few seconds and is indistinguishable from autoplay. Set
-`autoplay: false` to leave it silent until she presses play, or `src: ''` to
+Two details in `useAudioPlayer` are load-bearing, and both were bugs first:
+
+- The fallback listens for `touchend`/`click`/`keydown` and deliberately **not**
+  `pointerdown`. iOS grants user activation only once a gesture *completes*, so
+  a pointerdown attempt gets refused.
+- Listeners detach only once playback genuinely succeeds. Detaching on the first
+  attempt threw away the later events that would have worked — which is exactly
+  why the music used to need a manual tap on the control.
+
+Set `autoplay: false` to leave it silent until she presses play, or `src: ''` to
 remove the control entirely.
 
 ### The final surprise

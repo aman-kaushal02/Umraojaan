@@ -5,6 +5,7 @@ import CtaButton from '@/components/CtaButton';
 import { EASE_SILK } from '@/animations/motion';
 import { birthdayConfig } from '@/data/config';
 import { useExperience } from '@/hooks/useExperience';
+import { useMusic } from '@/hooks/useMusic';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 /**
@@ -15,8 +16,21 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
  */
 export function IntroScene() {
   const { advance } = useExperience();
+  const { start: startMusic } = useMusic();
   const { intro } = birthdayConfig;
   const reducedMotion = usePrefersReducedMotion();
+
+  /**
+   * Her first tap does two things: opens the letter and starts the music.
+   *
+   * Playback is kicked off synchronously here, inside the click handler, which
+   * is the one path mobile Safari reliably honours — anything deferred to an
+   * effect or a document-level listener can be refused.
+   */
+  const open = () => {
+    startMusic();
+    advance();
+  };
 
   const fade = (delay: number) => ({
     initial: reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 },
@@ -69,7 +83,7 @@ export function IntroScene() {
 
         <motion.div {...fade(3.4)} className="mt-12 sm:mt-14">
           <CtaButton
-            onClick={advance}
+            onClick={open}
             icon={<ArrowRight className="h-3.5 w-3.5" strokeWidth={1.6} aria-hidden="true" />}
             ariaLabel={`${intro.cta} — begin the surprise`}
           >
