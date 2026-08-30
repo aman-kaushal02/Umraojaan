@@ -18,6 +18,7 @@ export function SceneTransition({ children }: { children: ReactNode }) {
   return (
     <AnimatePresence mode="wait" initial={false} custom={direction}>
       <motion.main
+        /* The picture area. Letterboxing sits above this, in TheatreStage. */
         key={scene}
         custom={direction}
         variants={reducedMotion ? sceneVariantsCalm : sceneVariants}

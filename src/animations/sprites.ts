@@ -1,33 +1,38 @@
 /**
  * Pre-rendered canvas sprites.
  *
- * Drawing a soft glow per particle per frame (radial gradients, shadowBlur)
- * is the fastest way to lose 60fps. Instead every shape is rasterised once
- * into a tiny offscreen canvas and then blitted with `drawImage`, which is
- * cheap enough to run hundreds of times a frame.
+ * Drawing a soft glow per particle per frame (radial gradients, shadowBlur) is
+ * the fastest way to lose 60fps. Every shape is rasterised once into a tiny
+ * offscreen canvas and then blitted with `drawImage`, which is cheap enough to
+ * run hundreds of times a frame.
  */
 
 const cache = new Map<string, HTMLCanvasElement>();
 
-function create(key: string, size: number, paint: (ctx: CanvasRenderingContext2D, size: number) => void) {
+function create(
+  key: string,
+  width: number,
+  height: number,
+  paint: (ctx: CanvasRenderingContext2D, w: number, h: number) => void,
+) {
   const cached = cache.get(key);
   if (cached) return cached;
 
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = width;
+  canvas.height = height;
 
   const ctx = canvas.getContext('2d');
-  if (ctx) paint(ctx, size);
+  if (ctx) paint(ctx, width, height);
 
   cache.set(key, canvas);
   return canvas;
 }
 
-/** Soft round bloom — used for dust, sparks and firework embers. */
+/** Soft round bloom — dust in the beam, embers, sparks. */
 export function glowSprite(color: string): HTMLCanvasElement {
-  return create(`glow|${color}`, 34, (ctx, size) => {
-    const r = size / 2;
+  return create(`glow|${color}`, 34, 34, (ctx, w) => {
+    const r = w / 2;
     const gradient = ctx.createRadialGradient(r, r, 0, r, r, r);
     gradient.addColorStop(0, color);
     gradient.addColorStop(0.26, color);
@@ -39,30 +44,38 @@ export function glowSprite(color: string): HTMLCanvasElement {
   });
 }
 
-/** Tiny heart with a matching halo. */
-export function heartSprite(color: string): HTMLCanvasElement {
-  return create(`heart|${color}`, 30, (ctx, size) => {
-    ctx.translate(size / 2, size / 2 + 1);
-    ctx.scale(size / 32, size / 32);
-    ctx.beginPath();
-    ctx.moveTo(0, 9);
-    ctx.bezierCurveTo(-13, -1, -10, -13, -4.6, -13);
-    ctx.bezierCurveTo(-1.6, -13, 0, -10.2, 0, -10.2);
-    ctx.bezierCurveTo(0, -10.2, 1.6, -13, 4.6, -13);
-    ctx.bezierCurveTo(10, -13, 13, -1, 0, 9);
-    ctx.closePath();
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 7;
-    ctx.fill();
+/** Anamorphic streak — a horizontal flare off the lens. */
+export function streakSprite(color: string): HTMLCanvasElement {
+  return create(`streak|${color}`, 128, 16, (ctx, w, h) => {
+    const gradient = ctx.createLinearGradient(0, 0, w, 0);
+    gradient.addColorStop(0, 'rgba(0,0,0,0)');
+    gradient.addColorStop(0.5, color);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
+
+    /* Taper vertically so the ends feather instead of stopping flat. */
+    for (let y = 0; y < h; y += 1) {
+      const falloff = 1 - Math.abs(y - h / 2) / (h / 2);
+      ctx.globalAlpha = falloff * falloff;
+      ctx.fillRect(0, y, w, 1);
+    }
+    ctx.globalAlpha = 1;
   });
 }
 
-/** Slim ribbon of confetti — deliberately thin so it reads as elegant. */
-export function ribbonSprite(color: string): HTMLCanvasElement {
-  return create(`ribbon|${color}`, 24, (ctx, size) => {
-    ctx.fillStyle = color;
+/** A short bright flick of light — sparks thrown off a flare. */
+export function sparkSprite(color: string): HTMLCanvasElement {
+  return create(`spark|${color}`, 24, 24, (ctx, w) => {
+    const c = w / 2;
+    ctx.strokeStyle = color;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 2;
     ctx.globalAlpha = 0.9;
-    ctx.fillRect(size / 2 - 1.5, 3, 3, size - 6);
+    ctx.beginPath();
+    ctx.moveTo(c - 7, c);
+    ctx.lineTo(c + 7, c);
+    ctx.moveTo(c, c - 7);
+    ctx.lineTo(c, c + 7);
+    ctx.stroke();
   });
 }

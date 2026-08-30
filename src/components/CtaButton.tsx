@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useHasFinePointer } from '@/hooks/useMediaQuery';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
-type Variant = 'gold' | 'outline' | 'quiet';
+type Variant = 'lamp' | 'housing' | 'quiet';
 
 interface CtaButtonProps {
   children: ReactNode;
@@ -19,17 +19,20 @@ interface CtaButtonProps {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  gold:
-    'text-ink-900 bg-gradient-to-b from-champagne-200 via-champagne-300 to-champagne-500 ' +
-    'shadow-[0_10px_30px_-12px_rgba(224,190,134,0.7)]',
-  outline:
-    'text-ivory-50 border border-champagne-300/60 bg-ink-900/35 backdrop-blur-md ' +
-    'shadow-[inset_0_1px_0_rgba(247,231,201,0.14)] hover:border-champagne-200 hover:bg-ink-900/55',
-  quiet: 'text-blush-200/85 hover:text-ivory-50 underline decoration-blush-300/30 decoration-1 underline-offset-[6px]',
+  /* A lit control on the projector housing. */
+  lamp:
+    'text-theatre-950 bg-gradient-to-b from-beam-100 via-lamp-300 to-lamp-500 ' +
+    'shadow-[0_10px_30px_-12px_rgba(227,185,114,0.75)]',
+  /* Engraved brass, unlit. */
+  housing:
+    'text-beam-100 border border-brass-400/50 bg-theatre-900/50 backdrop-blur-md ' +
+    'shadow-[inset_0_1px_0_rgba(231,211,173,0.14)] hover:border-brass-300 hover:bg-theatre-800/70',
+  quiet:
+    'text-beam-200/80 hover:text-beam-50 underline decoration-brass-400/40 decoration-1 underline-offset-[6px]',
 };
 
 /**
- * The one button style used across the whole experience.
+ * The one control style in the projection booth.
  *
  * Works with mouse, touch and keyboard: the magnetic drift is a pointer-only
  * flourish layered on top of a completely ordinary <button>.
@@ -37,7 +40,7 @@ const VARIANTS: Record<Variant, string> = {
 export function CtaButton({
   children,
   onClick,
-  variant = 'gold',
+  variant = 'lamp',
   icon,
   className = '',
   ariaLabel,
@@ -59,9 +62,8 @@ export function CtaButton({
       const dx = (event.clientX - (rect.left + rect.width / 2)) / rect.width;
       const dy = (event.clientY - (rect.top + rect.height / 2)) / rect.height;
 
-      node.style.setProperty('--mx', `${(dx * 10).toFixed(2)}px`);
-      node.style.setProperty('--my', `${(dy * 7).toFixed(2)}px`);
-      node.style.setProperty('--gx', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+      node.style.setProperty('--mx', `${(dx * 9).toFixed(2)}px`);
+      node.style.setProperty('--my', `${(dy * 6).toFixed(2)}px`);
     },
     [magnetic],
   );
@@ -85,16 +87,16 @@ export function CtaButton({
       disabled={disabled}
       autoFocus={autoFocus}
       aria-label={ariaLabel}
-      whileHover={reducedMotion || disabled ? undefined : { scale: isQuiet ? 1 : 1.035 }}
+      whileHover={reducedMotion || disabled ? undefined : { scale: isQuiet ? 1 : 1.03 }}
       whileTap={disabled ? undefined : { scale: isQuiet ? 0.99 : 0.965 }}
       transition={{ type: 'spring', stiffness: 320, damping: 22 }}
       className={[
         'group relative isolate inline-flex items-center justify-center gap-2.5',
-        'font-sans uppercase no-select',
+        'font-label uppercase no-select',
         isQuiet
-          ? 'text-[0.68rem] tracking-[0.28em] px-2 py-2'
-          : 'text-[0.7rem] xs:text-xs tracking-[0.3em] px-7 py-4 xs:px-9 rounded-full',
-        'transition-colors duration-500 ease-silk',
+          ? 'text-[0.66rem] tracking-slate px-2 py-2'
+          : 'text-[0.68rem] xs:text-[0.74rem] tracking-slate px-7 py-4 xs:px-9 rounded-[2px]',
+        'transition-colors duration-500 ease-gate',
         'disabled:opacity-40 disabled:pointer-events-none',
         VARIANTS[variant],
         className,
@@ -104,40 +106,46 @@ export function CtaButton({
         transition: 'transform 350ms cubic-bezier(0.22, 1, 0.36, 1), color 500ms',
       }}
     >
-      {/* Breathing halo */}
+      {/* Lamp halo */}
       {!isQuiet && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -inset-[3px] -z-10 rounded-full bg-champagne-300/25 blur-lg animate-breathe motion-reduce:animate-none"
+          className={[
+            'pointer-events-none absolute -inset-[3px] -z-10 rounded-[3px] blur-lg',
+            variant === 'lamp' ? 'bg-lamp-300/30' : 'bg-brass-400/12',
+            reducedMotion ? '' : 'animate-beam-breathe',
+          ].join(' ')}
         />
       )}
 
-      {/* Cursor-tracked sheen */}
-      {variant === 'gold' && (
+      {/* A pass of light across the control */}
+      {variant === 'lamp' && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden rounded-full"
+          className="pointer-events-none absolute inset-0 -z-[5] overflow-hidden rounded-[2px]"
         >
           <span
-            className="absolute inset-y-0 w-1/2 -translate-x-full bg-gradient-to-r from-transparent via-white/55 to-transparent
-                       transition-transform duration-700 ease-silk group-hover:translate-x-[150%] group-focus-visible:translate-x-[150%]"
+            className="absolute inset-y-0 w-1/2 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent
+                       transition-transform duration-700 ease-gate group-hover:translate-x-[150%] group-focus-visible:translate-x-[150%]"
           />
         </span>
       )}
 
-      {/* Expanding ring on the outline variant */}
-      {variant === 'outline' && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-champagne-300/30 animate-pulse-ring motion-reduce:animate-none"
-        />
+      {/* Corner ticks, like a frame marker */}
+      {variant === 'housing' && (
+        <>
+          <span aria-hidden="true" className="absolute left-0 top-0 h-2 w-2 border-l border-t border-brass-300/70" />
+          <span aria-hidden="true" className="absolute right-0 top-0 h-2 w-2 border-r border-t border-brass-300/70" />
+          <span aria-hidden="true" className="absolute bottom-0 left-0 h-2 w-2 border-b border-l border-brass-300/70" />
+          <span aria-hidden="true" className="absolute bottom-0 right-0 h-2 w-2 border-b border-r border-brass-300/70" />
+        </>
       )}
 
       <span className="relative">{children}</span>
       {icon ? (
         <span
           aria-hidden="true"
-          className="relative transition-transform duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1"
+          className="relative transition-transform duration-500 ease-gate group-hover:translate-x-1 group-focus-visible:translate-x-1"
         >
           {icon}
         </span>

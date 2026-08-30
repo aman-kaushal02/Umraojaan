@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react';
-import { ImageIcon } from 'lucide-react';
+import { Film } from 'lucide-react';
 
 interface SafeImageProps {
   src?: string;
   alt: string;
   className?: string;
-  /** Shown inside the placeholder when the image is missing. */
+  /** Shown inside the placeholder when the frame is missing. */
   fallbackLabel?: string;
-  /** Eager-load the hero image of a scene; everything else stays lazy. */
+  /** Eager-load the hero frame of a scene; everything else stays lazy. */
   priority?: boolean;
 }
 
 /**
- * An image that can't break the page.
+ * A frame that can't break the projection.
  *
  * No `src`, a typo'd path, a 404 or an unsupported format all resolve to the
- * same elegant placeholder frame, so an unfinished photo folder never turns
- * into a broken-image icon in the middle of a love letter.
+ * same unexposed frame, so an unfinished folder never turns into a broken-image
+ * icon in the middle of the screening.
  */
 export function SafeImage({
   src,
   alt,
   className = '',
-  fallbackLabel = 'Add your photo here',
+  fallbackLabel = 'frame not exposed',
   priority = false,
 }: SafeImageProps) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>(
@@ -38,36 +38,27 @@ export function SafeImage({
       <div
         role="img"
         aria-label={alt}
-        className={`relative flex flex-col items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-ivory-200 via-blush-100 to-ivory-300 ${className}`}
+        className={`celluloid relative flex flex-col items-center justify-center gap-3 overflow-hidden ${className}`}
       >
         <div
           aria-hidden="true"
-          className="absolute inset-0 opacity-60"
+          className="absolute inset-0 opacity-70"
           style={{
             background:
-              'radial-gradient(circle at 30% 26%, rgba(224,190,134,0.35), transparent 55%), radial-gradient(circle at 74% 78%, rgba(173,91,107,0.22), transparent 58%)',
+              'radial-gradient(circle at 42% 34%, rgba(227,185,114,0.14), transparent 58%)',
           }}
         />
-        <ImageIcon
-          aria-hidden="true"
-          className="relative h-7 w-7 text-rose-500/45"
-          strokeWidth={1.1}
-        />
-        <span className="relative px-6 text-center font-sans text-[0.6rem] uppercase tracking-[0.24em] text-rose-600/55">
-          {fallbackLabel}
-        </span>
+        <Film aria-hidden="true" className="relative h-6 w-6 text-brass-400/50" strokeWidth={1.1} />
+        <span className="slug relative px-6 text-center text-brass-300/50">{fallbackLabel}</span>
       </div>
     );
   }
 
   return (
-    <div className={`relative overflow-hidden bg-ivory-200 ${className}`}>
+    <div className={`celluloid relative overflow-hidden ${className}`}>
       {status === 'loading' && (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 overflow-hidden bg-ivory-200"
-        >
-          <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent motion-reduce:animate-none" />
+        <div aria-hidden="true" className="absolute inset-0 celluloid">
+          <div className="absolute inset-0 animate-beam-breathe bg-gradient-to-b from-transparent via-beam-200/10 to-transparent motion-reduce:animate-none" />
         </div>
       )}
       <img
@@ -79,10 +70,11 @@ export function SafeImage({
         onLoad={() => setStatus('ready')}
         onError={() => setStatus('failed')}
         className={[
-          'h-full w-full object-cover transition-[opacity,filter,transform] duration-[1200ms] ease-silk',
+          /* Comes up like a print in the developer: dark and soft, then sharp. */
+          'h-full w-full object-cover transition-[opacity,filter,transform] duration-[1600ms] ease-gate',
           status === 'ready'
-            ? 'opacity-100 blur-0 scale-100'
-            : 'opacity-0 blur-md scale-[1.04]',
+            ? 'opacity-100 blur-0 scale-100 brightness-100 contrast-100'
+            : 'opacity-0 blur-lg scale-[1.06] brightness-[0.35] contrast-[0.7]',
         ].join(' ')}
       />
     </div>

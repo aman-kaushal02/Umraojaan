@@ -1,40 +1,44 @@
 import type { Transition, Variants } from 'framer-motion';
 
-/* Shared easing curves so every scene moves with the same hand. */
-export const EASE_SILK = [0.22, 1, 0.36, 1] as const;
-export const EASE_DRAPE = [0.65, 0, 0.35, 1] as const;
+/* Shared curves, so every scene moves with the same hand. */
+export const EASE_GATE = [0.22, 1, 0.36, 1] as const;
+export const EASE_CUT = [0.85, 0, 0.15, 1] as const;
 
 export const springSoft: Transition = {
   type: 'spring',
-  stiffness: 140,
-  damping: 20,
+  stiffness: 150,
+  damping: 21,
   mass: 0.9,
 };
 
-export const tweenSilk = (duration = 0.9, delay = 0): Transition => ({
+export const tweenGate = (duration = 0.9, delay = 0): Transition => ({
   duration,
   delay,
-  ease: EASE_SILK,
+  ease: EASE_GATE,
 });
 
-/** Cross-fade + drift used between full scenes. */
+/**
+ * Scene changes are cut on a dissolve: the outgoing scene loses focus and
+ * brightness as the lamp swings away, the incoming one resolves as the gate
+ * settles.
+ */
 export const sceneVariants: Variants = {
   enter: (direction: number) => ({
     opacity: 0,
-    scale: direction > 0 ? 1.04 : 0.98,
-    filter: 'blur(10px)',
+    scale: direction > 0 ? 1.035 : 0.985,
+    filter: 'blur(12px) brightness(1.5)',
   }),
   center: {
     opacity: 1,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: { duration: 1.05, ease: EASE_SILK },
+    filter: 'blur(0px) brightness(1)',
+    transition: { duration: 1.05, ease: EASE_GATE },
   },
   exit: (direction: number) => ({
     opacity: 0,
-    scale: direction > 0 ? 0.985 : 1.03,
-    filter: 'blur(8px)',
-    transition: { duration: 0.62, ease: EASE_DRAPE },
+    scale: direction > 0 ? 0.99 : 1.025,
+    filter: 'blur(9px) brightness(0.6)',
+    transition: { duration: 0.6, ease: EASE_CUT },
   }),
 };
 
@@ -45,7 +49,7 @@ export const sceneVariantsCalm: Variants = {
   exit: { opacity: 0, transition: { duration: 0.2, ease: 'linear' } },
 };
 
-/** Staggered container for lists of lines/cards. */
+/** Staggered container for credit rolls and lists of frames. */
 export const staggerParent = (stagger = 0.14, delay = 0.1): Variants => ({
   hidden: {},
   show: {
@@ -59,11 +63,22 @@ export const riseChild: Variants = {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
-    transition: { duration: 1, ease: EASE_SILK },
+    transition: { duration: 1, ease: EASE_GATE },
   },
 };
 
 export const calmChild: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { duration: 0.3 } },
+};
+
+/** A print coming up in the developer: dark and soft, then sharp. */
+export const developIn: Variants = {
+  hidden: { opacity: 0, filter: 'blur(14px) brightness(0.3) contrast(0.7)', scale: 1.06 },
+  show: {
+    opacity: 1,
+    filter: 'blur(0px) brightness(1) contrast(1)',
+    scale: 1,
+    transition: { duration: 1.7, ease: EASE_GATE },
+  },
 };

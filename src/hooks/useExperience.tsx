@@ -35,14 +35,27 @@ interface ExperienceValue {
 
 const ExperienceContext = createContext<ExperienceValue | null>(null);
 
+/** The first scene in the running order, whatever it happens to be called. */
+const OPENING = SCENE_ORDER[0];
+
 export function ExperienceProvider({ children }: { children: ReactNode }) {
-  const [scene, setScene] = useState<SceneId>('intro');
+  const [scene, setScene] = useState<SceneId>(OPENING);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [reached, setReached] = useState<SceneId[]>(['intro']);
+  const [reached, setReached] = useState<SceneId[]>([OPENING]);
 
   /** Guards against double-fires from rapid taps during a transition. */
   const transitioning = useRef(false);
+  /**
+   * The current scene, readable synchronously.
+   *
+   * State updaters passed to `setScene` must stay pure — React double-invokes
+   * them in development, so anything with a side effect (flipping the guard
+   * above, scheduling a timeout) runs twice and the second pass sees state the
+   * first pass created. Keeping the decision out here fixes that.
+   */
+  const sceneRef = useRef<SceneId>(OPENING);
+  sceneRef.current = scene;
 
   const registerInteraction = useCallback(() => {
     setHasInteracted((prev) => (prev ? prev : true));
@@ -66,46 +79,45 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     };
   }, [hasInteracted]);
 
-  const go = useCallback((next: SceneId) => {
-    if (transitioning.current) return;
+  /** Opens the transition window, so a second tap can't double-advance. */
+  const claim = useCallback(() => {
+    if (transitioning.current) return false;
+    transitioning.current = true;
+    window.setTimeout(() => {
+      transitioning.current = false;
+    }, 420);
+    return true;
+  }, []);
 
-    setScene((current) => {
-      if (current === next) return current;
-      transitioning.current = true;
-      window.setTimeout(() => {
-        transitioning.current = false;
-      }, 420);
+  const go = useCallback(
+    (next: SceneId) => {
+      const current = sceneRef.current;
+      if (next === current) return;
+      if (!claim()) return;
 
       setDirection(SCENE_ORDER.indexOf(next) >= SCENE_ORDER.indexOf(current) ? 1 : -1);
-      return next;
-    });
-
-    setReached((prev) => (prev.includes(next) ? prev : [...prev, next]));
-  }, []);
+      sceneRef.current = next;
+      setScene(next);
+      setReached((prev) => (prev.includes(next) ? prev : [...prev, next]));
+    },
+    [claim],
+  );
 
   const advance = useCallback(() => {
-    setScene((current) => {
-      const nextIndex = Math.min(SCENE_ORDER.indexOf(current) + 1, SCENE_ORDER.length - 1);
-      const next = SCENE_ORDER[nextIndex];
-      if (next === current) return current;
-
-      if (transitioning.current) return current;
-      transitioning.current = true;
-      window.setTimeout(() => {
-        transitioning.current = false;
-      }, 420);
-
-      setDirection(1);
-      setReached((prev) => (prev.includes(next) ? prev : [...prev, next]));
-      return next;
-    });
-  }, []);
+    const current = sceneRef.current;
+    const nextIndex = Math.min(SCENE_ORDER.indexOf(current) + 1, SCENE_ORDER.length - 1);
+    go(SCENE_ORDER[nextIndex]);
+  }, [go]);
 
   const restart = useCallback(() => {
+    if (sceneRef.current === OPENING) return;
+    if (!claim()) return;
+
     setDirection(-1);
-    setReached(['intro']);
-    setScene('intro');
-  }, []);
+    setReached([OPENING]);
+    sceneRef.current = OPENING;
+    setScene(OPENING);
+  }, [claim]);
 
   const mood = sceneMoods[scene];
   const index = SCENE_ORDER.indexOf(scene);

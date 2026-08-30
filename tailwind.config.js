@@ -4,117 +4,143 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* Warm paper & candlelight */
-        ivory: {
-          50: '#fffdf9',
-          100: '#fbf5ec',
-          200: '#f5ead9',
-          300: '#ecdcc4',
-          400: '#dec5a6',
+        /* The dark of an empty auditorium — black with a cool green cast. */
+        theatre: {
+          950: '#050605',
+          900: '#0a0c0a',
+          800: '#101312',
+          700: '#171b19',
+          600: '#202523',
         },
-        blush: {
-          100: '#fbeef0',
-          200: '#f6dbe0',
-          300: '#eebfc8',
-          400: '#e2a0ad',
-          500: '#d2818f',
+        /* Light thrown by the projector lamp. */
+        beam: {
+          50: '#fffdf6',
+          100: '#faf4e6',
+          200: '#f3e9d4',
+          300: '#e8d8b6',
+          400: '#d9c294',
         },
-        rose: {
-          400: '#c4737f',
-          500: '#ad5b6b',
-          600: '#8f4557',
+        /* The lamp itself, and everything it warms. */
+        lamp: {
+          200: '#f7dfb2',
+          300: '#efcf95',
+          400: '#e3b972',
+          500: '#cf9f52',
         },
-        burgundy: {
-          500: '#7a1130',
-          600: '#651028',
-          700: '#4d0c20',
-          800: '#360817',
-          900: '#22050f',
+        /* Projector housing, reel arms, engraved labels. */
+        brass: {
+          200: '#e7d3ad',
+          300: '#d3b581',
+          400: '#b98f4e',
+          500: '#97723c',
+          600: '#6d5330',
         },
-        champagne: {
-          200: '#f7e7c9',
-          300: '#eed6a9',
-          400: '#e0be86',
-          500: '#c9a367',
+        /* The cool glow bouncing off the screen. */
+        screenlight: {
+          200: '#c2ded9',
+          300: '#8fbdb6',
+          400: '#5f9791',
+          500: '#3f6f6a',
+          700: '#1e3d39',
         },
-        ink: {
-          700: '#1b1020',
-          800: '#150b18',
-          900: '#0d0611',
-          950: '#070409',
+        /* Film base: the amber of old celluloid. */
+        celluloid: {
+          100: '#eee5d2',
+          200: '#dccfb6',
+          400: '#a8967a',
+          600: '#6b5c47',
         },
       },
       fontFamily: {
-        serif: ['"Cormorant Garamond"', 'Georgia', 'Cambria', 'serif'],
-        sans: ['Jost', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        script: ['Parisienne', '"Cormorant Garamond"', 'cursive'],
+        /* Title cards and billing. */
+        display: ['"Bodoni Moda"', 'Didot', 'Georgia', 'serif'],
+        /* Everything typed: the screenplay, slates, captions. */
+        script: ['"Courier Prime"', 'ui-monospace', 'Courier New', 'monospace'],
+        /* Engraved small caps. */
+        label: ['Cinzel', 'Georgia', 'serif'],
       },
       letterSpacing: {
-        widest: '0.24em',
-        cinematic: '0.42em',
+        slate: '0.3em',
+        billing: '0.46em',
       },
       screens: {
         xs: '400px',
         tall: { raw: '(min-height: 760px)' },
-        'no-hover': { raw: '(hover: none)' },
         hover: { raw: '(hover: hover) and (pointer: fine)' },
       },
       boxShadow: {
-        paper:
-          '0 1px 1px rgba(34, 5, 15, 0.16), 0 12px 24px -10px rgba(34, 5, 15, 0.42), 0 40px 80px -40px rgba(0, 0, 0, 0.6)',
-        envelope:
-          '0 2px 2px rgba(0,0,0,0.14), 0 26px 50px -18px rgba(0, 0, 0, 0.65), 0 60px 120px -60px rgba(210, 129, 143, 0.35)',
-        glow: '0 0 0 1px rgba(224, 190, 134, 0.35), 0 0 34px -6px rgba(224, 190, 134, 0.5)',
+        /* A print resting on a light table. */
+        frame:
+          '0 1px 1px rgba(0,0,0,0.5), 0 18px 32px -14px rgba(0,0,0,0.85), 0 0 0 1px rgba(216,203,180,0.12)',
+        housing:
+          'inset 0 1px 0 rgba(247,223,178,0.16), 0 24px 48px -20px rgba(0,0,0,0.9)',
+        lamp: '0 0 40px -6px rgba(227,185,114,0.55), 0 0 90px -20px rgba(227,185,114,0.4)',
       },
       transitionTimingFunction: {
-        silk: 'cubic-bezier(0.22, 1, 0.36, 1)',
-        drape: 'cubic-bezier(0.65, 0, 0.35, 1)',
+        gate: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        cut: 'cubic-bezier(0.85, 0, 0.15, 1)',
       },
       keyframes: {
+        /* The lamp is never perfectly steady. */
+        'gate-flicker': {
+          '0%, 100%': { opacity: '1' },
+          '12%': { opacity: '0.93' },
+          '23%': { opacity: '0.99' },
+          '41%': { opacity: '0.9' },
+          '52%': { opacity: '1' },
+          '73%': { opacity: '0.95' },
+          '88%': { opacity: '0.98' },
+        },
+        /* Film never sits perfectly still in the gate. */
+        weave: {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0)' },
+          '25%': { transform: 'translate3d(-0.6px, 0.4px, 0)' },
+          '50%': { transform: 'translate3d(0.5px, -0.5px, 0)' },
+          '75%': { transform: 'translate3d(-0.3px, -0.3px, 0)' },
+        },
+        'reel-spin': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
+        /* A scratch in the emulsion, drifting across the print. */
+        scratch: {
+          '0%': { opacity: '0', transform: 'translateX(0) scaleY(0.7)' },
+          '6%': { opacity: '0.5' },
+          '14%': { opacity: '0' },
+          '100%': { opacity: '0', transform: 'translateX(14vw) scaleY(1)' },
+        },
+        'sprocket-run': {
+          from: { backgroundPosition: '0 0' },
+          to: { backgroundPosition: '0 -68px' },
+        },
+        'beam-breathe': {
+          '0%, 100%': { opacity: '0.72', transform: 'scaleX(1)' },
+          '50%': { opacity: '0.92', transform: 'scaleX(1.03)' },
+        },
         'fade-up': {
           from: { opacity: '0', transform: 'translate3d(0, 14px, 0)' },
           to: { opacity: '1', transform: 'translate3d(0, 0, 0)' },
         },
-        'fade-in': {
-          from: { opacity: '0' },
-          to: { opacity: '1' },
+        blink: {
+          '0%, 45%': { opacity: '1' },
+          '50%, 95%': { opacity: '0.18' },
         },
-        breathe: {
-          '0%, 100%': { opacity: '0.55', transform: 'scale(1)' },
-          '50%': { opacity: '1', transform: 'scale(1.06)' },
-        },
-        drift: {
-          '0%, 100%': { transform: 'translate3d(0, 0, 0) rotate(0deg)' },
-          '50%': { transform: 'translate3d(0, -12px, 0) rotate(0.4deg)' },
-        },
-        'drift-slow': {
-          '0%, 100%': { transform: 'translate3d(0, 0, 0) rotate(-0.35deg)' },
-          '50%': { transform: 'translate3d(0, -9px, 0) rotate(0.35deg)' },
-        },
-        shimmer: {
-          '0%': { transform: 'translateX(-120%)' },
-          '100%': { transform: 'translateX(120%)' },
-        },
-        'pulse-ring': {
-          '0%': { opacity: '0.5', transform: 'scale(0.9)' },
-          '80%, 100%': { opacity: '0', transform: 'scale(1.5)' },
-        },
-        'candle-flicker': {
-          '0%, 100%': { opacity: '0.85' },
-          '25%': { opacity: '0.62' },
-          '48%': { opacity: '1' },
-          '70%': { opacity: '0.72' },
+        'dust-drift': {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0)' },
+          '50%': { transform: 'translate3d(0, -10px, 0)' },
         },
       },
       animation: {
+        'gate-flicker': 'gate-flicker 4.2s steps(1, end) infinite',
+        weave: 'weave 0.9s steps(1, end) infinite',
+        'reel-spin': 'reel-spin 3.4s linear infinite',
+        'reel-spin-slow': 'reel-spin 9s linear infinite',
+        scratch: 'scratch 7s linear infinite',
+        'sprocket-run': 'sprocket-run 1.1s linear infinite',
+        'beam-breathe': 'beam-breathe 6s ease-in-out infinite',
         'fade-up': 'fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both',
-        'fade-in': 'fade-in 1.2s ease-out both',
-        breathe: 'breathe 5.5s ease-in-out infinite',
-        drift: 'drift 7s ease-in-out infinite',
-        'drift-slow': 'drift-slow 11s ease-in-out infinite',
-        shimmer: 'shimmer 2.8s ease-in-out infinite',
-        'pulse-ring': 'pulse-ring 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite',
-        'candle-flicker': 'candle-flicker 4.5s ease-in-out infinite',
+        blink: 'blink 1.6s steps(1, end) infinite',
+        'dust-drift': 'dust-drift 8s ease-in-out infinite',
       },
     },
   },

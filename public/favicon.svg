@@ -1,14 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <radialGradient id="g" cx="50%" cy="35%" r="70%">
-      <stop offset="0%" stop-color="#f6d9c4" />
-      <stop offset="55%" stop-color="#d98a9a" />
-      <stop offset="100%" stop-color="#6b1030" />
+    <radialGradient id="lamp" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#f7dfb2" />
+      <stop offset="58%" stop-color="#c99a54" />
+      <stop offset="100%" stop-color="#6d5330" />
     </radialGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#12070f" />
-  <path
-    d="M32 50s-16-9.6-16-21.2C16 21.7 21 17 27 17c2.9 0 5 1.4 5 1.4S34.1 17 37 17c6 0 11 4.7 11 11.8C48 40.4 32 50 32 50z"
-    fill="url(#g)"
-  />
+  <rect width="64" height="64" rx="14" fill="#0a0c0a" />
+  <!-- reel body -->
+  <circle cx="32" cy="32" r="19" fill="none" stroke="url(#lamp)" stroke-width="3.4" />
+  <circle cx="32" cy="32" r="3.6" fill="url(#lamp)" />
+  <!-- spool windows -->
+  <g fill="url(#lamp)" opacity="0.9">
+    <circle cx="32" cy="20" r="3.2" />
+    <circle cx="42.4" cy="26" r="3.2" />
+    <circle cx="42.4" cy="38" r="3.2" />
+    <circle cx="32" cy="44" r="3.2" />
+    <circle cx="21.6" cy="38" r="3.2" />
+    <circle cx="21.6" cy="26" r="3.2" />
+  </g>
 </svg>

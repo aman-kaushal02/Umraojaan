@@ -1,6 +1,6 @@
 import { useMemo, type CSSProperties } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { EASE_SILK } from '@/animations/motion';
+import { EASE_GATE } from '@/animations/motion';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 type Tag = 'p' | 'h1' | 'h2' | 'h3' | 'div' | 'span' | 'blockquote';
@@ -87,7 +87,7 @@ export function AnimatedText({
           filter: 'blur(0px)',
           transition: {
             duration: mode === 'lines' ? 1.15 : 0.9,
-            ease: EASE_SILK,
+            ease: EASE_GATE,
           },
         },
       };

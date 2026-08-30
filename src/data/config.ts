@@ -1,281 +1,291 @@
 /* =====================================================================
  *
- *   ❤  T H E   O N L Y   F I L E   Y O U   N E E D   T O   E D I T  ❤
+ *   R E E L   O N E  —  T H E   O N L Y   F I L E   T O   E D I T
  *
- *   Everything the experience says, shows and plays is defined here.
- *   Change the words, swap the photos, drop in a song — nothing else
- *   in the codebase contains personal information.
+ *   Week two of the countdown. Everything the screening says, shows and
+ *   plays is defined here. No other file contains personal information.
  *
  *   Missing an asset? Leave the field as an empty string ('') or delete
- *   it. The site degrades gracefully and never breaks.
+ *   it. The projection degrades gracefully and never breaks.
  *
  * ===================================================================== */
 
-export interface Memory {
-  /** Chapter label, e.g. "Chapter 01". Rendered as a small kicker. */
-  chapter: string;
-  /** Chapter heading, e.g. "The Beginning". */
+export interface FilmScene {
+  /** Board label, e.g. "Scene 01". */
+  slate: string;
+  /** Screenplay slug line, e.g. "INT. PHOTO STUDIO — DAY". */
+  slug: string;
+  /** Scene title. */
   title: string;
-  /** 1–3 sentences. Keep it intimate, not long. */
-  description: string;
-  /** Small date caption under the photo, e.g. "August 2025". */
-  date?: string;
-  /** Optional handwritten-style line shown beneath the photo. */
-  quote?: string;
+  /** Two or three sentences. Keep it spoken, not written. */
+  note: string;
+  /** Small typed caption under the frame. */
+  footnote?: string;
   /**
-   * Photo path. Put your images in `public/memories/` and reference them
-   * as '/memories/your-photo.jpg'. If the file is missing, an elegant
-   * placeholder frame is shown instead.
+   * Photograph. Put images in `public/reel/` and reference them as
+   * '/reel/frame-01.jpeg'. A missing file shows an unexposed frame instead.
    */
   image?: string;
   /** Describe the photo for screen readers. Falls back to the title. */
   alt?: string;
-  /** Tilt of the polaroid in degrees. Small values look best (-6…6). */
-  tilt?: number;
 }
 
-export interface FinalSurpriseConfig {
+export interface LastReelConfig {
   /** Small label on the reveal button. */
   buttonLabel: string;
-  /** Heading shown once the surprise is open. */
+  /** Heading shown once it's playing. */
   title: string;
-  /** Optional video file, e.g. '/surprise/for-you.mp4'. */
+  /** Optional video, e.g. '/reel/for-you.mp4'. */
   video?: string;
-  /** Optional poster image for the video. */
   videoPoster?: string;
-  /** Optional voice note, e.g. '/surprise/voice-note.m4a'. */
+  /** Optional voice note, e.g. '/reel/voice-note.m4a'. */
   audio?: string;
-  /** Optional single closing photo. */
+  /** Optional closing photograph. */
   photo?: string;
   photoAlt?: string;
-  /** Handwritten closing note. Always shown if present. */
-  handwritten?: string;
+  /** Typed closing note. Always shown if present. */
+  note?: string;
   /** Shown when no media has been added yet. */
   placeholder: string;
 }
 
-export interface BirthdayConfig {
-  /** Her name. Used in the reveal and the final scene. */
+export interface ReelConfig {
+  /** Her name. Used in the billing and the premiere. */
   name: string;
   /** Signed at the very end, e.g. "— Aman". Leave '' to hide. */
   signature: string;
+  /** How long until her birthday. Shown on the title card and the end board. */
+  countdown: string;
 
-  intro: {
-    kicker: string;
+  /** Scene 1 — the dark auditorium. */
+  projector: {
+    label: string;
     line: string;
     subline: string;
     cta: string;
     hint: string;
   };
 
-  envelope: {
-    /** Monogram engraved on the wax seal. 1–2 characters. */
-    sealMonogram: string;
-    /** Line addressed on the front of the envelope. */
-    addressedTo: string;
+  /** Scene 2 — threading the reel. */
+  reel: {
+    /** Engraved on the reel's centre boss. 1–2 characters. */
+    monogram: string;
+    /** Typed on the film can's label. */
+    canLabel: string;
     tease: string;
     prompt: string;
   };
 
-  /** The first letter. Each string is revealed one after another. */
-  letter: {
-    salutation: string;
+  /** Scene 3 — opening titles. */
+  titles: {
+    presents: string;
+    title: string;
+    subtitle: string;
+    /** Revealed one line at a time, like credits. */
     lines: string[];
     cta: string;
   };
 
-  memories: {
-    kicker: string;
+  /** Scene 4 — the screening itself. */
+  screening: {
+    label: string;
     heading: string;
     subheading: string;
-    items: Memory[];
-    /** One last line after the final chapter, before the button. */
+    frames: FilmScene[];
     outro: string;
     cta: string;
   };
 
-  gift: {
+  /** Scene 5 — the clapperboard. */
+  slate: {
     lines: string[];
     prompt: string;
+    /** Chalked onto the board. */
+    board: {
+      production: string;
+      director: string;
+      scene: string;
+      take: string;
+    };
   };
 
-  reveal: {
-    /** Small line set above her name. */
-    greeting: string;
-    /** Optional photograph, revealed as the thing inside the gift box. */
+  /** Scene 6 — the premiere. */
+  premiere: {
+    /** Small line above her name. */
+    billing: string;
+    /** The final frame. */
     photo?: string;
     photoAlt?: string;
-    /** Handwritten caption under the photograph. */
     photoCaption?: string;
     /** Revealed paragraph by paragraph. */
     paragraphs: string[];
     cta: string;
   };
 
-  final: {
-    /** Two-beat closing. First line, pause, then the answer. */
-    question: string;
-    answer: string;
+  /** Scene 7 — the tail. */
+  end: {
+    /** Struck through, because it isn't. */
+    struck: string;
+    /** What replaces it. */
+    replacement: string;
     closing: string;
-    surprise: FinalSurpriseConfig;
+    lastReel: LastReelConfig;
     restart: string;
   };
 
   music: {
     /** Song path, e.g. '/music/our-song.mp3'. Leave '' to hide the control. */
     src: string;
-    /** Shown in the music control tooltip. */
+    /** Shown in the music control's label. */
     title: string;
     /** 0 – 1 */
     volume: number;
-    /**
-     * Start the track as early as the browser allows.
-     *
-     * Audible autoplay on a cold visit is blocked by every modern browser, so
-     * the player asks for sound immediately, falls back to rolling the track
-     * muted, and goes audible from the top on the first gesture. Set false to
-     * leave it silent until she presses play herself.
-     */
+    /** Start as early as the browser allows. See useAudioPlayer. */
     autoplay: boolean;
   };
 }
 
-export const birthdayConfig: BirthdayConfig = {
+export const reelConfig: ReelConfig = {
   name: 'Umraojaan',
   signature: '— Always yours',
+  countdown: 'Twenty-three days to go',
 
   /* ---------------------------------------------------------------- */
-  intro: {
-    kicker: 'For you, and only you',
-    line: 'Someone left something special for you…',
-    subline: 'Are you curious enough to open it?',
-    cta: 'Open it',
-    hint: 'Take your time. It waited this long for you.',
+  projector: {
+    label: 'One reel · one seat · one viewer',
+    line: 'The house lights are down.',
+    subline: 'There’s a film here, and you’re the only one on the guest list.',
+    cta: 'Start the projector',
+    hint: 'Best watched with the sound on.',
   },
 
   /* ---------------------------------------------------------------- */
-  envelope: {
-    sealMonogram: 'U',
-    addressedTo: 'to the one reading this',
-    tease: "There's a little something inside…",
-    prompt: 'Tap the envelope',
+  reel: {
+    monogram: 'U',
+    canLabel: 'REEL 01 — PROPERTY OF THE ONLY VIEWER',
+    tease: 'It’s already loaded. It just needs someone to start it.',
+    prompt: 'Thread the reel',
   },
 
   /* ---------------------------------------------------------------- */
-  letter: {
-    salutation: 'If you’re reading this…',
+  titles: {
+    presents: 'A film nobody else will ever see',
+    title: 'Reel One',
+    subtitle: 'Assembled from four prints and one unfair portrait',
     lines: [
-      'then you’ve finally found the little surprise I made for you.',
-      'I spent longer on this than I’ll ever admit — rewriting lines, moving things a pixel to the left, smiling at my screen like someone who has clearly lost it.',
-      'But this isn’t the end.',
-      'It’s only the beginning.',
+      'I found some old photographs of you this week.',
+      'Not the ones you post. The printed kind — the ones that live in an envelope in someone’s cupboard and come out about once a year.',
+      'And I realised I’ve only ever met the last few minutes of you.',
+      'So I put the rest in order and made you a film.',
     ],
-    cta: 'Continue',
+    cta: 'Roll it',
   },
 
   /* ---------------------------------------------------------------- */
-  memories: {
-    kicker: 'Chapter one of many',
-    heading: 'Do you remember…?',
-    subheading: 'Scroll slowly. Some of these still make me laugh out loud.',
-    items: [
+  screening: {
+    label: 'Now screening',
+    heading: 'Four prints, in order.',
+    subheading: 'Scroll slowly. The projector isn’t in a hurry.',
+    frames: [
       {
-        chapter: 'Chapter 01',
-        title: 'The Beginning',
-        description:
-          'The day everything quietly rearranged itself. I didn’t know it yet, but that was the last ordinary day of my life.',
-        date: 'Where it started',
-        quote: 'I remember thinking: please let this one stay.',
-        image: '/memories/Chapter-1.jpeg',
-        alt: 'A photograph of us from the very beginning',
-        tilt: -4,
+        slate: 'Scene 01',
+        slug: 'INT. PHOTO STUDIO — RED BACKDROP',
+        title: 'The First Take',
+        note:
+          'Someone stood you in front of a red curtain and told you to look at the camera. Hands already on your hips. Completely unbothered. You have not changed as much as you think.',
+        footnote: 'print no. 01 — held up to the light',
+        image: '/reel/frame-01.jpeg',
+        alt: 'A hand holding a printed studio photograph of Umraojaan as a small child',
       },
       {
-        chapter: 'Chapter 02',
-        title: 'The Little Moments',
-        description:
-          'Not the big occasions. The 2am conversations, the shared earphone, the way you steal food off my plate and pretend you didn’t.',
-        date: 'Every ordinary Tuesday',
-        quote: 'Turns out the small things were the whole thing.',
-        image: '/memories/Chapter-2.jpeg',
-        alt: 'A candid photograph of an ordinary, perfect day together',
-        tilt: 3.5,
+        slate: 'Scene 02',
+        slug: 'INT. BEDROOM MIRROR — AFTERNOON',
+        title: 'The One Who Hid',
+        note:
+          'A phone exactly where your face should be. I know this version of you — the one who hadn’t decided yet whether she wanted to be looked at. I’d have looked anyway.',
+        footnote: 'print no. 02 — slightly out of focus, kept anyway',
+        image: '/reel/frame-02.jpeg',
+        alt: 'A soft, washed-out mirror photograph, a phone held up over her face',
       },
       {
-        chapter: 'Chapter 03',
-        title: 'The Memories',
-        description:
-          'Places we went, songs that became ours, that one photo where we both look terrible and it’s still my favourite.',
-        date: 'Somewhere along the way',
-        quote: 'We were so busy being happy we forgot to take pictures.',
-        image: '/memories/Chapter-3.jpeg',
-        alt: 'A photograph from one of our favourite days together',
-        tilt: -2.5,
+        slate: 'Scene 03',
+        slug: 'INT. ROOM BY THE WINDOW — LATE LIGHT',
+        title: 'The Light Found You',
+        note:
+          'Blue and gold, and a curtain doing its best to hold the afternoon back. You’re looking straight down the lens like you already know how this scene ends.',
+        footnote: 'print no. 03 — available light, no retouching',
+        image: '/reel/frame-03.jpeg',
+        alt: 'Umraojaan by a window in a blue and gold outfit, light glowing through the curtain',
       },
       {
-        chapter: 'Chapter 04',
-        title: 'The Things I Love About You',
-        description:
-          'Your laugh, three seconds before you actually find it funny. Your stubbornness. The way you care about people quietly, without needing credit.',
-        date: 'Still counting',
-        quote: 'And the list keeps getting longer.',
-        image: '/memories/Chapter-4.jpeg',
-        alt: 'A portrait of Umraojaan, the person this was made for',
-        tilt: 4.5,
+        slate: 'Scene 04',
+        slug: 'EXT. WHEREVER YOU WERE — LAUGHING',
+        title: 'The Real One',
+        note:
+          'This is the take I’d keep. Mid-laugh, a bit shaky, one small blue eye watching over you from the top of the frame. Nothing about it is posed, which is exactly why it’s the best thing in the reel.',
+        footnote: 'print no. 04 — the one I’d put on the poster',
+        image: '/reel/frame-04.jpeg',
+        alt: 'A close, laughing photograph of Umraojaan in orange with silver earrings',
       },
     ],
-    outro: 'And somehow, that’s still not everything.',
-    cta: 'There’s more',
+    outro: 'That’s the archive. Now the part I actually made this for.',
+    cta: 'One more take',
   },
 
   /* ---------------------------------------------------------------- */
-  gift: {
-    lines: ['But wait…', 'There’s still one thing left.'],
-    prompt: 'Open the gift',
+  slate: {
+    lines: ['Quiet on set.', 'There’s one more take.'],
+    prompt: 'Clap the board',
+    board: {
+      production: 'REEL ONE',
+      director: 'A.K.',
+      scene: '05',
+      take: '01',
+    },
   },
 
   /* ---------------------------------------------------------------- */
-  reveal: {
-    greeting: 'Thirty days to go',
-    photo: '/memories/bday-box.jpeg',
-    photoAlt: 'The little birthday box, opened early',
-    photoCaption: 'thirty days early',
+  premiere: {
+    billing: 'And starring, in every single frame',
+    photo: '/reel/portrait.jpeg',
+    photoAlt: 'Umraojaan now — looking back over her shoulder, lit low and warm',
+    photoCaption: 'and this is her now',
     paragraphs: [
-      'You know it’s a 30-day countdown to your birthday…',
-      'So I tried something new, just to bring a smile to your face.',
-      'I hope this little piece of work of mine does exactly that.',
-      'May Allah bless you with good health and that goofy smile of yours.',
+      'Four old prints, and then this. Same person. Somehow entirely different.',
+      'I don’t think you know how good the difference is. The girl with her hands on her hips grew into someone who walks into a room and quietly rearranges it.',
+      'So this is week two of waiting for your birthday, and I’ve run out of ways to be casual about it.',
+      'May Allah keep you in good health, in good company, and in that ridiculous goofy laugh of yours.',
     ],
-    cta: 'One more thing',
+    cta: 'Let it run out',
   },
 
   /* ---------------------------------------------------------------- */
-  final: {
-    question: 'And if I had to choose all over again…',
-    answer: 'I’d still choose you.',
-    closing: 'Happy almost-birthday, my love.',
-    surprise: {
-      buttonLabel: 'One last thing…',
-      title: 'This part is just for you',
-      /* Drop your files into `public/surprise/` and add the paths here. */
+  end: {
+    struck: 'The End',
+    replacement: 'To be continued',
+    closing: 'There are still a few reels left in this.',
+    lastReel: {
+      buttonLabel: 'There’s something after the credits',
+      title: 'Reel 02 — not for release',
+      /* Drop files into `public/reel/` and add the paths here. */
       video: '',
       videoPoster: '',
       audio: '',
       photo: '',
       photoAlt: '',
-      handwritten: 'I love you. Not loudly, not for show — just completely, and every single day.',
-      placeholder: 'Your final surprise will appear here.',
+      note: 'Same time next week. I’m not running out of ideas, I’m just pacing myself.',
+      placeholder: 'The next reel is still being cut.',
     },
-    restart: 'Read it again',
+    restart: 'Play it again',
   },
 
   /* ---------------------------------------------------------------- */
   music: {
     src: '/music/our-song.mp3',
-    title: 'Our song',
+    title: 'Reel One',
     volume: 0.42,
     autoplay: true,
   },
 };
 
-export default birthdayConfig;
+export default reelConfig;

@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { glowSprite, heartSprite } from '@/animations/sprites';
+import { glowSprite } from '@/animations/sprites';
 import { useExperience } from '@/hooks/useExperience';
 import { useIsCompact } from '@/hooks/useMediaQuery';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
-interface Particle {
+interface Mote {
   x: number;
   y: number;
   size: number;
@@ -12,27 +12,27 @@ interface Particle {
   sway: number;
   phase: number;
   twinkle: number;
-  heart: boolean;
   color: string;
 }
 
 /**
- * The one persistent particle field for the entire site.
+ * Dust hanging in the projector beam.
  *
- * A single canvas that lives for the whole session and reacts to the current
- * scene's mood, rather than one canvas per scene. Sprites are pre-rendered,
- * the loop is delta-timed, DPR is capped at 2, and everything pauses when the
- * tab is hidden.
+ * One canvas for the whole session that reacts to the current scene's mood,
+ * rather than one per scene. Motes brighten as they drift through the middle of
+ * the frame — where the beam is — which is what sells the light as volumetric.
+ * Sprites are pre-rendered, the loop is delta-timed, DPR is capped at 2, and
+ * everything pauses when the tab is hidden.
  */
-export function ParticleBackground() {
+export function DustMotes() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { mood } = useExperience();
   const compact = useIsCompact();
   const reducedMotion = usePrefersReducedMotion();
 
-  /* Live mood in a ref so the animation loop never restarts on scene change. */
-  const moodRef = useRef(mood.particles);
-  moodRef.current = mood.particles;
+  /* Live mood in a ref so the loop never restarts on a scene change. */
+  const moodRef = useRef(mood);
+  moodRef.current = mood;
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -42,35 +42,34 @@ export function ParticleBackground() {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
-    const budget = compact ? 30 : 62;
-    /* Scenes can ask for up to 1.6x the base budget, so the pool is sized for
-       the busiest moment and `active` simply walks further into it. */
+    const budget = compact ? 34 : 70;
+    /* Scenes can ask for up to 1.6x the base budget, so size for the busiest. */
     const poolSize = Math.ceil(budget * 1.6);
-    const particles: Particle[] = [];
+    const motes: Mote[] = [];
+
     let width = 0;
     let height = 0;
-    let dpr = 1;
     let raf = 0;
     let last = performance.now();
     let running = true;
 
-    const palette = () => moodRef.current.palette;
     const pick = <T,>(items: readonly T[]) => items[(Math.random() * items.length) | 0];
 
-    const spawn = (particle: Particle, atBottom: boolean) => {
-      particle.x = Math.random() * width;
-      particle.y = atBottom ? height + Math.random() * 60 : Math.random() * height;
-      particle.size = 0.9 + Math.random() * 2.4;
-      particle.speed = 0.5 + Math.random() * 1.1;
-      particle.sway = 6 + Math.random() * 20;
-      particle.phase = Math.random() * Math.PI * 2;
-      particle.twinkle = 0.35 + Math.random() * 0.5;
-      particle.heart = Math.random() < moodRef.current.heartChance;
-      particle.color = pick(palette());
+    const spawn = (mote: Mote, atBottom: boolean) => {
+      /* Cluster toward the middle: that's where the beam is. */
+      const bias = (Math.random() + Math.random() + Math.random()) / 3;
+      mote.x = (0.5 + (bias - 0.5) * 1.7) * width;
+      mote.y = atBottom ? height + Math.random() * 60 : Math.random() * height;
+      mote.size = 0.7 + Math.random() * 2.1;
+      mote.speed = 0.45 + Math.random() * 1.05;
+      mote.sway = 8 + Math.random() * 26;
+      mote.phase = Math.random() * Math.PI * 2;
+      mote.twinkle = 0.3 + Math.random() * 0.55;
+      mote.color = pick(moodRef.current.dust.palette);
     };
 
     for (let i = 0; i < poolSize; i += 1) {
-      const particle: Particle = {
+      const mote: Mote = {
         x: 0,
         y: 0,
         size: 1,
@@ -78,15 +77,14 @@ export function ParticleBackground() {
         sway: 10,
         phase: 0,
         twinkle: 0.5,
-        heart: false,
-        color: '#fbf5ec',
+        color: '#f3e9d4',
       };
-      spawn(particle, false);
-      particles.push(particle);
+      spawn(mote, false);
+      motes.push(mote);
     }
 
     const resize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = Math.floor(width * dpr);
@@ -99,33 +97,37 @@ export function ParticleBackground() {
     const frame = (now: number) => {
       if (!running) return;
 
-      /* Clamp delta so a backgrounded tab can't teleport every particle. */
+      /* Clamp delta so a backgrounded tab can't teleport every mote. */
       const delta = Math.min((now - last) / 1000, 0.05);
       last = now;
 
-      const { density, drift } = moodRef.current;
-      const active = Math.min(poolSize, Math.round(budget * Math.min(density, 1.6)));
+      const { dust, beam } = moodRef.current;
+      const active = Math.min(poolSize, Math.round(budget * Math.min(dust.density, 1.6)));
 
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'lighter';
 
+      const centre = width / 2;
+
       for (let i = 0; i < active; i += 1) {
-        const p = particles[i];
+        const m = motes[i];
 
-        p.phase += delta * 1.1;
-        p.y += drift * p.speed * delta;
-        p.x += Math.sin(p.phase * 0.6) * p.sway * delta;
+        m.phase += delta * 1.05;
+        m.y += dust.drift * m.speed * delta;
+        m.x += Math.sin(m.phase * 0.55) * m.sway * delta;
 
-        if (p.y < -40 || p.x < -60 || p.x > width + 60) spawn(p, true);
+        if (m.y < -40 || m.x < -60 || m.x > width + 60) spawn(m, true);
 
-        const alpha = p.twinkle * (0.55 + 0.45 * Math.sin(p.phase));
+        /* In the beam it glitters; out at the edges it barely exists. */
+        const fromCentre = Math.abs(m.x - centre) / centre;
+        const inBeam = Math.max(0.12, 1 - fromCentre * 1.15);
+        const alpha = m.twinkle * inBeam * beam * (0.55 + 0.45 * Math.sin(m.phase));
+
         if (alpha <= 0.02) continue;
 
-        const sprite = p.heart ? heartSprite(p.color) : glowSprite(p.color);
-        const scale = p.heart ? p.size * 2.6 : p.size * 5.2;
-
-        ctx.globalAlpha = alpha;
-        ctx.drawImage(sprite, p.x - scale / 2, p.y - scale / 2, scale, scale);
+        const scale = m.size * 5;
+        ctx.globalAlpha = Math.min(1, alpha);
+        ctx.drawImage(glowSprite(m.color), m.x - scale / 2, m.y - scale / 2, scale, scale);
       }
 
       ctx.globalAlpha = 1;
@@ -163,9 +165,9 @@ export function ParticleBackground() {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[2] h-full w-full"
+      className="pointer-events-none fixed inset-0 z-[1] h-full w-full"
     />
   );
 }
 
-export default ParticleBackground;
+export default DustMotes;

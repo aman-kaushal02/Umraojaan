@@ -1,40 +1,41 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { motion } from 'framer-motion';
-import AmbientStage from '@/components/AmbientStage';
 import CursorGlow from '@/components/CursorGlow';
+import DustMotes from '@/components/DustMotes';
+import FrameCounter from '@/components/FrameCounter';
 import MusicController from '@/components/MusicController';
-import ParticleBackground from '@/components/ParticleBackground';
-import ProgressTrail from '@/components/ProgressTrail';
 import SceneTransition from '@/components/SceneTransition';
-import BirthdayReveal from '@/scenes/BirthdayReveal';
-import EnvelopeScene from '@/scenes/EnvelopeScene';
-import FinalScene from '@/scenes/FinalScene';
-import GiftScene from '@/scenes/GiftScene';
-import IntroScene from '@/scenes/IntroScene';
-import LetterScene from '@/scenes/LetterScene';
-import MemoryScene from '@/scenes/MemoryScene';
-import { birthdayConfig } from '@/data/config';
+import TheatreStage from '@/components/TheatreStage';
+import EndScene from '@/scenes/EndScene';
+import PremiereScene from '@/scenes/PremiereScene';
+import ProjectorScene from '@/scenes/ProjectorScene';
+import ReelScene from '@/scenes/ReelScene';
+import ScreeningScene from '@/scenes/ScreeningScene';
+import SlateScene from '@/scenes/SlateScene';
+import TitlesScene from '@/scenes/TitlesScene';
+import { reelConfig } from '@/data/config';
 import { sceneLabels, type SceneId } from '@/data/scenes';
 import { useAppHeight } from '@/hooks/useAppHeight';
 import { useExperience } from '@/hooks/useExperience';
 import { MusicProvider } from '@/hooks/useMusic';
 
 const SCENES: Record<SceneId, ComponentType> = {
-  intro: IntroScene,
-  envelope: EnvelopeScene,
-  letter: LetterScene,
-  memories: MemoryScene,
-  gift: GiftScene,
-  reveal: BirthdayReveal,
-  finale: FinalScene,
+  projector: ProjectorScene,
+  reel: ReelScene,
+  titles: TitlesScene,
+  screening: ScreeningScene,
+  slate: SlateScene,
+  premiere: PremiereScene,
+  end: EndScene,
 };
 
 /**
- * The stage manager.
+ * The projection booth.
  *
- * Owns the persistent layers — lighting, particles, cursor light, music, the
- * chapter ribbon — and swaps one scene at a time through the transition.
- * Nothing here knows anything personal; all of that lives in `data/config.ts`.
+ * Owns the persistent layers — the auditorium, the dust in the beam, the cursor
+ * light, the sound head, the frame counter — and runs one scene at a time
+ * through the transition. Nothing here knows anything personal; all of that
+ * lives in `data/config.ts`.
  */
 export function App() {
   const { scene } = useExperience();
@@ -42,7 +43,7 @@ export function App() {
 
   useAppHeight();
 
-  /* Lift the curtain one frame after mount, so fonts and layout settle first. */
+  /* Strike the lamp one frame after mount, so fonts and layout settle first. */
   useEffect(() => {
     const id = window.setTimeout(() => setBooted(true), 60);
     return () => window.clearTimeout(id);
@@ -52,8 +53,8 @@ export function App() {
 
   return (
     <div className="relative min-h-[var(--app-height)] w-full overflow-x-hidden">
-      <AmbientStage />
-      <ParticleBackground />
+      <TheatreStage />
+      <DustMotes />
       <CursorGlow />
 
       <MusicProvider>
@@ -61,23 +62,23 @@ export function App() {
           <Scene />
         </SceneTransition>
 
-        <MusicController title={birthdayConfig.music.title} />
+        <MusicController title={reelConfig.music.title} />
       </MusicProvider>
 
-      <ProgressTrail />
+      <FrameCounter />
 
-      {/* Announce each chapter to assistive tech without showing anything. */}
+      {/* Announce each scene to assistive tech without showing anything. */}
       <p aria-live="polite" className="sr-only">
         {sceneLabels[scene]}
       </p>
 
-      {/* Opening curtain */}
+      {/* House lights, fading down */}
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[80] bg-ink-950"
+        className="pointer-events-none fixed inset-0 z-[80] bg-theatre-950"
         initial={{ opacity: 1 }}
         animate={{ opacity: booted ? 0 : 1 }}
-        transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
       />
     </div>
   );

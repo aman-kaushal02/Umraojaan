@@ -2,10 +2,12 @@ import { motion } from 'framer-motion';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 /**
- * A whisper rather than a signpost: a thin line of light that keeps falling,
- * hinting that the page continues.
+ * The film advancing: a short run of sprocket holes pulling downward.
+ *
+ * A hint rather than a signpost — it says "there's more strip" without asking
+ * for a click.
  */
-export function ScrollCue({ label = 'Scroll' }: { label?: string }) {
+export function ScrollCue({ label = 'Keep watching' }: { label?: string }) {
   const reducedMotion = usePrefersReducedMotion();
 
   return (
@@ -15,18 +17,23 @@ export function ScrollCue({ label = 'Scroll' }: { label?: string }) {
       transition={{ delay: 1.6, duration: 1.2 }}
       className="flex flex-col items-center gap-3"
     >
-      <span className="kicker text-champagne-200/45">{label}</span>
+      <span className="slate-label text-brass-300/45">{label}</span>
       <span
         aria-hidden="true"
-        className="relative block h-12 w-px overflow-hidden bg-champagne-200/15"
+        className="relative block h-14 w-[9px] overflow-hidden rounded-[1px] border-x border-brass-400/20"
       >
-        {!reducedMotion && (
-          <motion.span
-            className="absolute inset-x-0 top-0 h-5 bg-gradient-to-b from-transparent via-champagne-200/90 to-transparent"
-            animate={{ y: ['-100%', '340%'] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
+        <span
+          className={[
+            'absolute inset-x-0 -top-[68px] h-[240px]',
+            reducedMotion ? '' : 'animate-sprocket-run',
+          ].join(' ')}
+          style={{
+            backgroundImage:
+              'linear-gradient(to bottom, rgba(227,185,114,0.55) 0 8px, transparent 8px 17px)',
+            backgroundSize: '100% 17px',
+            backgroundRepeat: 'repeat-y',
+          }}
+        />
       </span>
     </motion.div>
   );

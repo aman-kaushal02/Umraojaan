@@ -6,18 +6,18 @@
  * Design tokens
  * ------------------------------------------------------------------ */
 :root {
-  --ivory: #fbf5ec;
-  --blush: #eebfc8;
-  --rose: #ad5b6b;
-  --burgundy: #7a1130;
-  --champagne: #e0be86;
-  --ink: #0d0611;
+  --theatre: #0a0c0a;
+  --beam: #f3e9d4;
+  --lamp: #e3b972;
+  --brass: #b98f4e;
+  --screenlight: #5f9791;
+  --celluloid: #dccfb6;
 
-  /* Ambient scene lighting, animated by the experience orchestrator. */
-  --amb-1: #1a0a16;
-  --amb-2: #0d0611;
-  --amb-3: #2a0f22;
-  --amb-glow: 0.5;
+  /* Projection state, driven per scene by the orchestrator. */
+  --house-1: #12100c;
+  --house-2: #0a0c0a;
+  --house-3: #050605;
+  --beam-strength: 0.5;
 
   /* Fallback for browsers without dvh. */
   --app-height: 100vh;
@@ -29,29 +29,29 @@
 .boot-shell {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 50% 42%, #2a0f22 0%, #12070f 45%, #070409 100%);
+  background: radial-gradient(circle at 50% 46%, #16130d 0%, #0a0c0a 52%, #050605 100%);
 }
-.boot-shell__glow {
+.boot-shell__lamp {
   position: absolute;
   left: 50%;
-  top: 44%;
-  width: 40vmin;
-  height: 40vmin;
+  top: 46%;
+  width: 26vmin;
+  height: 26vmin;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(224, 190, 134, 0.22), transparent 70%);
-  filter: blur(14px);
-  animation: boot-breathe 2.6s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(227, 185, 114, 0.3), transparent 68%);
+  filter: blur(16px);
+  animation: boot-warmup 2.4s ease-in-out infinite;
 }
-@keyframes boot-breathe {
+@keyframes boot-warmup {
   0%,
   100% {
-    opacity: 0.45;
-    transform: translate(-50%, -50%) scale(0.94);
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.9);
   }
   50% {
     opacity: 0.95;
-    transform: translate(-50%, -50%) scale(1.04);
+    transform: translate(-50%, -50%) scale(1.05);
   }
 }
 
@@ -74,23 +74,22 @@
   body {
     margin: 0;
     padding: 0;
-    background-color: var(--ink);
+    background-color: var(--theatre);
   }
 
   body {
     min-height: 100vh;
     min-height: 100dvh;
-    color: var(--ivory);
-    font-family: Jost, ui-sans-serif, system-ui, sans-serif;
-    font-weight: 300;
-    line-height: 1.7;
+    color: var(--beam);
+    font-family: 'Courier Prime', ui-monospace, 'Courier New', monospace;
+    font-weight: 400;
+    line-height: 1.85;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
     overscroll-behavior-y: none;
   }
 
-  /* The experience owns the viewport; only designated scenes scroll. */
+  /* The projection owns the viewport; only long scenes scroll. */
   body[data-lock-scroll='true'] {
     overflow: hidden;
     touch-action: pan-y;
@@ -100,9 +99,9 @@
   h2,
   h3,
   h4 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-weight: 300;
-    line-height: 1.12;
+    font-family: 'Bodoni Moda', Didot, Georgia, serif;
+    font-weight: 400;
+    line-height: 1.08;
     margin: 0;
     text-wrap: balance;
   }
@@ -126,16 +125,16 @@
     max-width: 100%;
   }
 
-  /* Visible, elegant focus ring for keyboard users. */
+  /* Keyboard focus reads as a lamp catching an edge. */
   :focus-visible {
-    outline: 2px solid rgba(238, 191, 200, 0.9);
+    outline: 2px solid rgba(227, 185, 114, 0.9);
     outline-offset: 4px;
-    border-radius: 4px;
+    border-radius: 2px;
   }
 
   ::selection {
-    background: rgba(224, 190, 134, 0.28);
-    color: #fffdf9;
+    background: rgba(227, 185, 114, 0.3);
+    color: #fffdf6;
   }
 
   ::-webkit-scrollbar {
@@ -146,16 +145,16 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(224, 190, 134, 0.22);
+    background: rgba(185, 143, 78, 0.28);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(224, 190, 134, 0.4);
+    background: rgba(185, 143, 78, 0.5);
   }
 }
 
 /* ------------------------------------------------------------------ *
- * Components / utilities
+ * Components
  * ------------------------------------------------------------------ */
 @layer components {
   .scene-frame {
@@ -168,71 +167,105 @@
     justify-content: center;
     padding-left: max(1.25rem, env(safe-area-inset-left));
     padding-right: max(1.25rem, env(safe-area-inset-right));
-    padding-top: max(2.25rem, env(safe-area-inset-top));
-    padding-bottom: max(2.25rem, env(safe-area-inset-bottom));
+    padding-top: max(3rem, env(safe-area-inset-top));
+    /**
+     * Deep enough that scene content can never end up underneath the frame
+     * counter and the sound head, which float in the bottom corners.
+     */
+    padding-bottom: max(5.25rem, calc(env(safe-area-inset-bottom) + 4.25rem));
   }
 
-  /* Warm handmade paper. Built from layered gradients — no image payload. */
-  .paper {
-    background-color: #fbf5ec;
+  /* Film base: warm, slightly uneven, faintly translucent. */
+  .celluloid {
+    background-color: #1a1712;
     background-image:
-      radial-gradient(circle at 18% 12%, rgba(214, 176, 138, 0.16), transparent 42%),
-      radial-gradient(circle at 84% 84%, rgba(173, 91, 107, 0.12), transparent 46%),
-      linear-gradient(174deg, #fffdf9 0%, #f8f0e3 52%, #f0e4d1 100%);
-    color: #3d2430;
+      linear-gradient(178deg, rgba(220, 207, 182, 0.09) 0%, rgba(220, 207, 182, 0.02) 60%),
+      radial-gradient(circle at 22% 18%, rgba(227, 185, 114, 0.1), transparent 52%);
   }
 
-  /* A single soft diagonal weave. Two crossing sets read as graph paper. */
-  .paper-fibers {
-    background-image: repeating-linear-gradient(
-      118deg,
-      rgba(122, 17, 48, 0.016) 0px,
-      rgba(122, 17, 48, 0.016) 1px,
-      transparent 1px,
-      transparent 7px
-    );
+  /* Sprocket holes down both edges of a filmstrip. */
+  .sprockets {
+    --hole: rgba(6, 8, 6, 0.96);
+    background-image:
+      radial-gradient(
+        ellipse 42% 30% at 50% 50%,
+        var(--hole) 0 99%,
+        transparent 100%
+      );
+    background-size: 100% 34px;
+    background-repeat: repeat-y;
   }
 
-  .gold-rule {
+  /* The projection screen surface: woven, slightly hot in the middle. */
+  .screen-panel {
+    background-color: #100f0c;
+    background-image:
+      radial-gradient(120% 90% at 50% 45%, rgba(243, 233, 212, 0.09) 0%, transparent 62%),
+      repeating-linear-gradient(
+        0deg,
+        rgba(243, 233, 212, 0.022) 0 1px,
+        transparent 1px 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(243, 233, 212, 0.018) 0 1px,
+        transparent 1px 3px
+      );
+  }
+
+  /* Small engraved caption, as found on equipment and slates. */
+  .slate-label {
+    font-family: Cinzel, Georgia, serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  /* Typed screenplay slug line. */
+  .slug {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .brass-rule {
     height: 1px;
     background: linear-gradient(
       to right,
       transparent,
-      rgba(224, 190, 134, 0.55) 22%,
-      rgba(247, 231, 201, 0.9) 50%,
-      rgba(224, 190, 134, 0.55) 78%,
+      rgba(185, 143, 78, 0.5) 20%,
+      rgba(231, 211, 173, 0.9) 50%,
+      rgba(185, 143, 78, 0.5) 80%,
       transparent
     );
   }
 
-  .glass-pill {
-    background: rgba(13, 6, 17, 0.5);
-    backdrop-filter: blur(14px) saturate(130%);
-    -webkit-backdrop-filter: blur(14px) saturate(130%);
-    border: 1px solid rgba(247, 231, 201, 0.16);
-  }
-
-  .kicker {
-    font-size: 0.62rem;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    font-weight: 400;
+  .housing-pill {
+    background: rgba(10, 12, 10, 0.62);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid rgba(185, 143, 78, 0.22);
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Utilities
+ * ------------------------------------------------------------------ */
 @layer utilities {
-  .text-shadow-soft {
-    text-shadow: 0 1px 24px rgba(0, 0, 0, 0.45);
-  }
-  .text-glow {
+  .text-lamp-glow {
     text-shadow:
-      0 0 22px rgba(247, 231, 201, 0.32),
-      0 0 60px rgba(238, 191, 200, 0.18);
+      0 0 20px rgba(227, 185, 114, 0.4),
+      0 0 64px rgba(243, 233, 212, 0.18);
+  }
+  .text-screen-glow {
+    text-shadow:
+      0 0 26px rgba(243, 233, 212, 0.5),
+      0 0 80px rgba(227, 185, 114, 0.28);
   }
   /**
-   * Hints the compositor without touching `transform` — writing a transform
-   * here would silently override Tailwind's translate utilities on the same
-   * element (and did, once, which is why this comment exists).
+   * Compositor hint only. Never set `transform` here — it would silently
+   * override Tailwind's translate utilities on the same element.
    */
   .gpu {
     will-change: transform, opacity;
@@ -254,10 +287,14 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  /* Old prints are never quite in register. */
+  .print-warm {
+    filter: sepia(0.16) saturate(1.06) contrast(1.04);
+  }
 }
 
 /* ------------------------------------------------------------------ *
- * Reduced motion — keep the story, drop the movement
+ * Reduced motion — keep the film, stop the movement
  * ------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -273,7 +310,7 @@
     scroll-behavior: auto !important;
   }
 
-  .boot-shell__glow {
+  .boot-shell__lamp {
     animation: none;
     opacity: 0.7;
   }
