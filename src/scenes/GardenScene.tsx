@@ -11,7 +11,13 @@ interface GardenSceneProps {
 
 export function GardenScene({ onContinue }: GardenSceneProps) {
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 py-16">
+    <div
+      className="relative w-full flex flex-col items-center justify-center px-6 pt-16"
+      style={{
+        minHeight: 'var(--app-height, 100vh)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)',
+      }}
+    >
       {/* Full garden of bloomed tulips — arranged in elegant arc */}
       <div className="absolute inset-0 flex items-end justify-center pb-24 pointer-events-none overflow-hidden">
         <motion.div

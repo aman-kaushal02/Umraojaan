@@ -203,8 +203,9 @@ export function GardenStage({
         />
       )}
 
-      {/* Content layer */}
-      <div className="relative z-10 w-full min-h-screen flex items-center justify-center px-6 py-12">
+      {/* Content layer. Scenes own their own padding so nothing is
+          double-inset, and tall scenes are free to grow and scroll. */}
+      <div className="relative z-10 w-full flex items-stretch justify-center">
         {children}
       </div>
     </div>

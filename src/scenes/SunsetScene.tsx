@@ -5,7 +5,13 @@ import { EASE_ENTRANCE } from '../animations/motion';
 
 export function SunsetScene() {
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 text-center">
+    <div
+      className="relative w-full flex flex-col items-center justify-center px-6 py-16 text-center"
+      style={{
+        minHeight: 'var(--app-height, 100vh)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)',
+      }}
+    >
       {/* Floating petals animation — luxury version */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(16)].map((_, i) => {

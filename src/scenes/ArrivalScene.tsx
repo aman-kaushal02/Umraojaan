@@ -11,7 +11,13 @@ interface ArrivalSceneProps {
 
 export function ArrivalScene({ onContinue }: ArrivalSceneProps) {
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 text-center">
+    <div
+      className="relative w-full flex flex-col items-center justify-center px-6 py-16 text-center"
+      style={{
+        minHeight: 'var(--app-height, 100vh)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)',
+      }}
+    >
       {/* Decorative closed buds in background grid */}
       <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none overflow-hidden">
         <motion.div
