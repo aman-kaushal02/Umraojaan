@@ -21,37 +21,37 @@ export const gardenConfig = {
 
   blooms: [
     {
-      color: 'coral',
+      color: 'coral' as const,
       memory: '/tulips/memory-01.jpeg',
       caption: 'The way you look at the world',
       note: 'This photo — the light was perfect that day.',
     },
     {
-      color: 'pink',
+      color: 'pink' as const,
       memory: '/tulips/memory-02.jpeg',
       caption: 'Your laughter',
       note: 'I swear I can still hear it.',
     },
     {
-      color: 'rose',
+      color: 'rose' as const,
       memory: '/tulips/memory-03.jpeg',
       caption: 'The quiet moments',
       note: 'When everything else falls away and it is just us.',
     },
     {
-      color: 'blush',
+      color: 'blush' as const,
       memory: '/tulips/memory-04.jpeg',
       caption: 'Your favorite place',
       note: 'Every time we go there, it feels like the first time.',
     },
     {
-      color: 'peach',
+      color: 'peach' as const,
       memory: '/tulips/memory-05.jpeg',
       caption: 'That smile',
       note: 'The one that makes my whole day make sense.',
     },
     {
-      color: 'salmon',
+      color: 'salmon' as const,
       memory: '/tulips/memory-06.jpeg',
       caption: 'Right now',
       note: 'This moment. This feeling. You.',
