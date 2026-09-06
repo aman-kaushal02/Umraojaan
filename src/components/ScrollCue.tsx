@@ -1,42 +1,69 @@
 import { motion } from 'framer-motion';
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
-/**
- * The film advancing: a short run of sprocket holes pulling downward.
- *
- * A hint rather than a signpost — it says "there's more strip" without asking
- * for a click.
- */
-export function ScrollCue({ label = 'Keep watching' }: { label?: string }) {
+interface ScrollCueProps {
+  label?: string;
+  onClick?: () => void;
+}
+
+export function ScrollCue({ label = 'Continue', onClick }: ScrollCueProps) {
   const reducedMotion = usePrefersReducedMotion();
+
+  if (onClick) {
+    return (
+      <motion.button
+        onClick={onClick}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.6 }}
+        className="flex flex-col items-center gap-2 text-white/70 hover:text-white transition-colors"
+        aria-label={label}
+      >
+        <span className="text-xs uppercase tracking-widest">{label}</span>
+        <motion.svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          animate={reducedMotion ? {} : { y: [0, 4, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          aria-hidden="true"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </motion.svg>
+      </motion.button>
+    );
+  }
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 1.6, duration: 1.2 }}
-      className="flex flex-col items-center gap-3"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.8, duration: 0.6 }}
+      className="flex flex-col items-center gap-2 text-white/70"
+      role="img"
+      aria-label="Scroll to continue"
     >
-      <span className="slate-label text-brass-300/45">{label}</span>
-      <span
+      <span className="text-xs uppercase tracking-widest">{label}</span>
+      <motion.svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        animate={reducedMotion ? {} : { y: [0, 4, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         aria-hidden="true"
-        className="relative block h-14 w-[9px] overflow-hidden rounded-[1px] border-x border-brass-400/20"
       >
-        <span
-          className={[
-            'absolute inset-x-0 -top-[68px] h-[240px]',
-            reducedMotion ? '' : 'animate-sprocket-run',
-          ].join(' ')}
-          style={{
-            backgroundImage:
-              'linear-gradient(to bottom, rgba(227,185,114,0.55) 0 8px, transparent 8px 17px)',
-            backgroundSize: '100% 17px',
-            backgroundRepeat: 'repeat-y',
-          }}
-        />
-      </span>
+        <polyline points="6 9 12 15 18 9" />
+      </motion.svg>
     </motion.div>
   );
 }
-
-export default ScrollCue;

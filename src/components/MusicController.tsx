@@ -1,78 +1,53 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
-import { EASE_GATE } from '@/animations/motion';
-import { useMusic } from '@/hooks/useMusic';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useMusic } from '../hooks/useMusic';
 
-interface MusicControllerProps {
-  /** Track name, surfaced in the accessible label. */
-  title: string;
-}
-
-/**
- * The sound head, mounted on the projector housing.
- *
- * Renders nothing at all when no track is configured or the file can't be
- * played, so a missing MP3 leaves no dead button behind.
- */
-export function MusicController({ title }: MusicControllerProps) {
-  const { available, playing, muted, toggle, toggleMute } = useMusic();
+export function MusicController() {
+  const { isPlaying, toggle } = useMusic();
 
   return (
     <AnimatePresence>
-      {available && (
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 14 }}
-          transition={{ duration: 0.8, ease: EASE_GATE, delay: 0.4 }}
-          className="housing-pill fixed bottom-[max(2.2rem,calc(env(safe-area-inset-bottom)+1.4rem))]
-                     right-[max(1rem,env(safe-area-inset-right))] z-50 flex items-center gap-1 rounded-[3px] p-1"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+        className="fixed bottom-6 right-6 z-50"
+      >
+        <button
+          onClick={toggle}
+          aria-label={isPlaying ? 'Pause music' : 'Play music'}
+          className="group relative flex items-center justify-center w-14 h-14 rounded-full 
+                     bg-white/20 backdrop-blur-md border border-white/30 shadow-lg
+                     hover:bg-white/30 transition-all duration-300"
         >
-          <button
-            type="button"
-            onClick={toggle}
-            aria-pressed={playing}
-            aria-label={playing ? `Pause ${title}` : `Play ${title}`}
-            title={playing ? `Pause ${title}` : `Play ${title}`}
-            className="group relative flex h-10 w-10 items-center justify-center rounded-[2px] text-brass-200/85
-                       transition-colors duration-300 hover:bg-brass-400/10 hover:text-beam-50"
-          >
-            {playing ? (
-              <Pause className="h-[15px] w-[15px]" strokeWidth={1.5} aria-hidden="true" />
-            ) : (
-              <Play className="h-[15px] w-[15px]" strokeWidth={1.5} aria-hidden="true" />
-            )}
+          {isPlaying ? (
+            <svg
+              className="w-5 h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+            </svg>
+          ) : (
+            <svg
+              className="w-5 h-5 text-white ml-0.5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
 
-            {/* The lamp indicator, blinking while the sound head runs */}
-            {playing && (
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute right-[5px] top-[5px] h-1 w-1 rounded-full bg-lamp-300 animate-blink motion-reduce:animate-none"
-              />
-            )}
-          </button>
-
-          <span aria-hidden="true" className="h-5 w-px bg-brass-300/20" />
-
-          <button
-            type="button"
-            onClick={toggleMute}
-            aria-pressed={muted}
-            aria-label={muted ? 'Unmute the soundtrack' : 'Mute the soundtrack'}
-            title={muted ? 'Unmute the soundtrack' : 'Mute the soundtrack'}
-            className="flex h-10 w-10 items-center justify-center rounded-[2px] text-brass-200/85
-                       transition-colors duration-300 hover:bg-brass-400/10 hover:text-beam-50"
-          >
-            {muted ? (
-              <VolumeX className="h-[15px] w-[15px]" strokeWidth={1.5} aria-hidden="true" />
-            ) : (
-              <Volume2 className="h-[15px] w-[15px]" strokeWidth={1.5} aria-hidden="true" />
-            )}
-          </button>
-        </motion.div>
-      )}
+          {/* Pulse indicator when playing */}
+          {isPlaying && (
+            <span
+              aria-hidden="true"
+              className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-400 animate-pulse"
+            />
+          )}
+        </button>
+      </motion.div>
     </AnimatePresence>
   );
 }
-
-export default MusicController;

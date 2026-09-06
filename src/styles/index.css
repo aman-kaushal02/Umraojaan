@@ -6,18 +6,14 @@
  * Design tokens
  * ------------------------------------------------------------------ */
 :root {
-  --theatre: #0a0c0a;
-  --beam: #f3e9d4;
-  --lamp: #e3b972;
-  --brass: #b98f4e;
-  --screenlight: #5f9791;
-  --celluloid: #dccfb6;
-
-  /* Projection state, driven per scene by the orchestrator. */
-  --house-1: #12100c;
-  --house-2: #0a0c0a;
-  --house-3: #050605;
-  --beam-strength: 0.5;
+  --garden-dawn: #1e1a33;
+  --garden-day: #87ceeb;
+  --garden-dusk: #d8a7ca;
+  --petal-coral: #ff6b6b;
+  --petal-pink: #ffb3d9;
+  --petal-rose: #ff69b4;
+  --stem-green: #4a7c59;
+  --cream: #fffef9;
 
   /* Fallback for browsers without dvh. */
   --app-height: 100vh;
@@ -29,29 +25,31 @@
 .boot-shell {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 50% 46%, #16130d 0%, #0a0c0a 52%, #050605 100%);
+  background: linear-gradient(to bottom, #1e1a33, #2d1b4e, #d8a7ca);
 }
-.boot-shell__lamp {
+
+.boot-shell__glow {
   position: absolute;
   left: 50%;
-  top: 46%;
-  width: 26vmin;
-  height: 26vmin;
+  top: 50%;
+  width: 30vmin;
+  height: 30vmin;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(227, 185, 114, 0.3), transparent 68%);
-  filter: blur(16px);
-  animation: boot-warmup 2.4s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(255, 182, 193, 0.4), transparent 70%);
+  filter: blur(20px);
+  animation: boot-bloom 2.8s ease-in-out infinite;
 }
-@keyframes boot-warmup {
+
+@keyframes boot-bloom {
   0%,
   100% {
-    opacity: 0.3;
-    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.85);
   }
   50% {
-    opacity: 0.95;
-    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
   }
 }
 
@@ -74,22 +72,22 @@
   body {
     margin: 0;
     padding: 0;
-    background-color: var(--theatre);
+    background-color: var(--garden-dawn);
   }
 
   body {
     min-height: 100vh;
     min-height: 100dvh;
-    color: var(--beam);
-    font-family: 'Courier Prime', ui-monospace, 'Courier New', monospace;
+    color: var(--cream);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-weight: 400;
-    line-height: 1.85;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
   }
 
-  /* The projection owns the viewport; only long scenes scroll. */
+  /* No scroll on most scenes */
   body[data-lock-scroll='true'] {
     overflow: hidden;
     touch-action: pan-y;
@@ -99,9 +97,9 @@
   h2,
   h3,
   h4 {
-    font-family: 'Bodoni Moda', Didot, Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
     font-weight: 400;
-    line-height: 1.08;
+    line-height: 1.2;
     margin: 0;
     text-wrap: balance;
   }
@@ -118,6 +116,9 @@
     border: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    /* Touch target minimum 44×44px */
+    min-width: 44px;
+    min-height: 44px;
   }
 
   img {
@@ -125,31 +126,31 @@
     max-width: 100%;
   }
 
-  /* Keyboard focus reads as a lamp catching an edge. */
+  /* Keyboard focus */
   :focus-visible {
-    outline: 2px solid rgba(227, 185, 114, 0.9);
+    outline: 2px solid rgba(255, 182, 193, 0.8);
     outline-offset: 4px;
-    border-radius: 2px;
+    border-radius: 8px;
   }
 
   ::selection {
-    background: rgba(227, 185, 114, 0.3);
-    color: #fffdf6;
+    background: rgba(255, 182, 193, 0.3);
+    color: #fff;
   }
 
   ::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(185, 143, 78, 0.28);
+    background: rgba(255, 182, 193, 0.3);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(185, 143, 78, 0.5);
+    background: rgba(255, 182, 193, 0.5);
   }
 }
 
@@ -165,87 +166,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-left: max(1.25rem, env(safe-area-inset-left));
-    padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
     padding-top: max(3rem, env(safe-area-inset-top));
-    /**
-     * Deep enough that scene content can never end up underneath the frame
-     * counter and the sound head, which float in the bottom corners.
-     */
-    padding-bottom: max(5.25rem, calc(env(safe-area-inset-bottom) + 4.25rem));
-  }
-
-  /* Film base: warm, slightly uneven, faintly translucent. */
-  .celluloid {
-    background-color: #1a1712;
-    background-image:
-      linear-gradient(178deg, rgba(220, 207, 182, 0.09) 0%, rgba(220, 207, 182, 0.02) 60%),
-      radial-gradient(circle at 22% 18%, rgba(227, 185, 114, 0.1), transparent 52%);
-  }
-
-  /* Sprocket holes down both edges of a filmstrip. */
-  .sprockets {
-    --hole: rgba(6, 8, 6, 0.96);
-    background-image:
-      radial-gradient(
-        ellipse 42% 30% at 50% 50%,
-        var(--hole) 0 99%,
-        transparent 100%
-      );
-    background-size: 100% 34px;
-    background-repeat: repeat-y;
-  }
-
-  /* The projection screen surface: woven, slightly hot in the middle. */
-  .screen-panel {
-    background-color: #100f0c;
-    background-image:
-      radial-gradient(120% 90% at 50% 45%, rgba(243, 233, 212, 0.09) 0%, transparent 62%),
-      repeating-linear-gradient(
-        0deg,
-        rgba(243, 233, 212, 0.022) 0 1px,
-        transparent 1px 3px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        rgba(243, 233, 212, 0.018) 0 1px,
-        transparent 1px 3px
-      );
-  }
-
-  /* Small engraved caption, as found on equipment and slates. */
-  .slate-label {
-    font-family: Cinzel, Georgia, serif;
-    font-size: 0.6rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
-
-  /* Typed screenplay slug line. */
-  .slug {
-    font-family: 'Courier Prime', monospace;
-    font-size: 0.66rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
-  .brass-rule {
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba(185, 143, 78, 0.5) 20%,
-      rgba(231, 211, 173, 0.9) 50%,
-      rgba(185, 143, 78, 0.5) 80%,
-      transparent
-    );
-  }
-
-  .housing-pill {
-    background: rgba(10, 12, 10, 0.62);
-    backdrop-filter: blur(14px) saturate(120%);
-    -webkit-backdrop-filter: blur(14px) saturate(120%);
-    border: 1px solid rgba(185, 143, 78, 0.22);
+    padding-bottom: max(5rem, calc(env(safe-area-inset-bottom) + 4rem));
   }
 }
 
@@ -253,48 +177,40 @@
  * Utilities
  * ------------------------------------------------------------------ */
 @layer utilities {
-  .text-lamp-glow {
+  .text-soft-glow {
     text-shadow:
-      0 0 20px rgba(227, 185, 114, 0.4),
-      0 0 64px rgba(243, 233, 212, 0.18);
+      0 0 20px rgba(255, 255, 255, 0.3),
+      0 0 40px rgba(255, 182, 193, 0.2);
   }
-  .text-screen-glow {
-    text-shadow:
-      0 0 26px rgba(243, 233, 212, 0.5),
-      0 0 80px rgba(227, 185, 114, 0.28);
-  }
-  /**
-   * Compositor hint only. Never set `transform` here — it would silently
-   * override Tailwind's translate utilities on the same element.
-   */
+
   .gpu {
     will-change: transform, opacity;
   }
+
   .no-select {
     user-select: none;
     -webkit-user-select: none;
   }
+
   .preserve-3d {
     transform-style: preserve-3d;
   }
+
   .backface-hidden {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
+
   .hide-scrollbar {
     scrollbar-width: none;
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  /* Old prints are never quite in register. */
-  .print-warm {
-    filter: sepia(0.16) saturate(1.06) contrast(1.04);
-  }
 }
 
 /* ------------------------------------------------------------------ *
- * Reduced motion — keep the film, stop the movement
+ * Reduced motion — keep the content, stop the animation
  * ------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -310,8 +226,30 @@
     scroll-behavior: auto !important;
   }
 
-  .boot-shell__lamp {
+  .boot-shell__glow {
     animation: none;
-    opacity: 0.7;
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Mobile optimization
+ * ------------------------------------------------------------------ */
+@media (max-width: 640px) {
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  button {
+    min-width: 48px;
+    min-height: 48px;
   }
 }

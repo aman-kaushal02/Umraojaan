@@ -1,87 +1,65 @@
-import { useEffect, useState, type ComponentType } from 'react';
-import { motion } from 'framer-motion';
-import CursorGlow from '@/components/CursorGlow';
-import DustMotes from '@/components/DustMotes';
-import FrameCounter from '@/components/FrameCounter';
-import MusicController from '@/components/MusicController';
-import SceneTransition from '@/components/SceneTransition';
-import TheatreStage from '@/components/TheatreStage';
-import EndScene from '@/scenes/EndScene';
-import PremiereScene from '@/scenes/PremiereScene';
-import ProjectorScene from '@/scenes/ProjectorScene';
-import ReelScene from '@/scenes/ReelScene';
-import ScreeningScene from '@/scenes/ScreeningScene';
-import SlateScene from '@/scenes/SlateScene';
-import TitlesScene from '@/scenes/TitlesScene';
-import { reelConfig } from '@/data/config';
-import { sceneLabels, type SceneId } from '@/data/scenes';
-import { useAppHeight } from '@/hooks/useAppHeight';
-import { useExperience } from '@/hooks/useExperience';
-import { MusicProvider } from '@/hooks/useMusic';
+import { useEffect } from 'react';
+import { useExperience } from './hooks/useExperience';
+import { useMusic } from './hooks/useMusic';
+import { useAppHeight } from './hooks/useAppHeight';
+import { GardenStage } from './components/GardenStage';
+import { SceneTransition } from './components/SceneTransition';
+import { MusicController } from './components/MusicController';
+import { CursorGlow } from './components/CursorGlow';
+import { getLighting } from './data/scenes';
+import { gardenConfig } from './data/config';
 
-const SCENES: Record<SceneId, ComponentType> = {
-  projector: ProjectorScene,
-  reel: ReelScene,
-  titles: TitlesScene,
-  screening: ScreeningScene,
-  slate: SlateScene,
-  premiere: PremiereScene,
-  end: EndScene,
-};
+// Scenes
+import { GateScene } from './scenes/GateScene';
+import { ArrivalScene } from './scenes/ArrivalScene';
+import { BloomScene } from './scenes/BloomScene';
+import { GardenScene } from './scenes/GardenScene';
+import { SunsetScene } from './scenes/SunsetScene';
 
-/**
- * The projection booth.
- *
- * Owns the persistent layers — the auditorium, the dust in the beam, the cursor
- * light, the sound head, the frame counter — and runs one scene at a time
- * through the transition. Nothing here knows anything personal; all of that
- * lives in `data/config.ts`.
- */
-export function App() {
-  const { scene } = useExperience();
-  const [booted, setBooted] = useState(false);
-
+export default function App() {
   useAppHeight();
+  const { currentScene, nextScene } = useExperience();
+  const { playMusic } = useMusic();
 
-  /* Strike the lamp one frame after mount, so fonts and layout settle first. */
+  // Attempt autoplay when ready, fallback handled by useMusic
   useEffect(() => {
-    const id = window.setTimeout(() => setBooted(true), 60);
-    return () => window.clearTimeout(id);
-  }, []);
+    playMusic();
+  }, [playMusic]);
 
-  const Scene = SCENES[scene];
+  const lighting = getLighting(currentScene);
+  const showParticles = currentScene !== 'gate' && currentScene !== 'sunset';
 
   return (
-    <div className="relative min-h-[var(--app-height)] w-full overflow-x-hidden">
-      <TheatreStage />
-      <DustMotes />
-      <CursorGlow />
-
-      <MusicProvider>
-        <SceneTransition>
-          <Scene />
+    <>
+      <GardenStage lighting={lighting} showParticles={showParticles}>
+        <SceneTransition sceneKey={currentScene}>
+          {currentScene === 'gate' && <GateScene onEnter={nextScene} />}
+          {currentScene === 'arrival' && <ArrivalScene onContinue={nextScene} />}
+          {currentScene === 'bloom1' && (
+            <BloomScene bloom={gardenConfig.blooms[0]} bloomIndex={0} onComplete={nextScene} />
+          )}
+          {currentScene === 'bloom2' && (
+            <BloomScene bloom={gardenConfig.blooms[1]} bloomIndex={1} onComplete={nextScene} />
+          )}
+          {currentScene === 'bloom3' && (
+            <BloomScene bloom={gardenConfig.blooms[2]} bloomIndex={2} onComplete={nextScene} />
+          )}
+          {currentScene === 'bloom4' && (
+            <BloomScene bloom={gardenConfig.blooms[3]} bloomIndex={3} onComplete={nextScene} />
+          )}
+          {currentScene === 'bloom5' && (
+            <BloomScene bloom={gardenConfig.blooms[4]} bloomIndex={4} onComplete={nextScene} />
+          )}
+          {currentScene === 'bloom6' && (
+            <BloomScene bloom={gardenConfig.blooms[5]} bloomIndex={5} onComplete={nextScene} />
+          )}
+          {currentScene === 'garden' && <GardenScene onContinue={nextScene} />}
+          {currentScene === 'sunset' && <SunsetScene />}
         </SceneTransition>
+      </GardenStage>
 
-        <MusicController title={reelConfig.music.title} />
-      </MusicProvider>
-
-      <FrameCounter />
-
-      {/* Announce each scene to assistive tech without showing anything. */}
-      <p aria-live="polite" className="sr-only">
-        {sceneLabels[scene]}
-      </p>
-
-      {/* House lights, fading down */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[80] bg-theatre-950"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: booted ? 0 : 1 }}
-        transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
-      />
-    </div>
+      <MusicController />
+      <CursorGlow />
+    </>
   );
 }
-
-export default App;

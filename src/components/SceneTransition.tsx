@@ -1,46 +1,40 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { ReactNode } from 'react';
-import { sceneVariants, sceneVariantsCalm } from '@/animations/motion';
-import { useExperience } from '@/hooks/useExperience';
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
-/**
- * Swaps one scene for another as a single cinematic dissolve.
- *
- * `mode="wait"` guarantees the outgoing scene finishes leaving before the next
- * one arrives — no overlap, no double scrollbars, and only one scene's
- * animations running at a time.
- */
-export function SceneTransition({ children }: { children: ReactNode }) {
-  const { scene, direction, mood } = useExperience();
+interface SceneTransitionProps {
+  children: ReactNode;
+  sceneKey: string;
+}
+
+export function SceneTransition({ children, sceneKey }: SceneTransitionProps) {
   const reducedMotion = usePrefersReducedMotion();
 
+  const variants = reducedMotion
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+      }
+    : {
+        initial: { opacity: 0, y: 20, filter: 'blur(10px)' },
+        animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+        exit: { opacity: 0, y: -20, filter: 'blur(10px)' },
+      };
+
   return (
-    <AnimatePresence mode="wait" initial={false} custom={direction}>
+    <AnimatePresence mode="wait">
       <motion.main
-        /* The picture area. Letterboxing sits above this, in TheatreStage. */
-        key={scene}
-        custom={direction}
-        variants={reducedMotion ? sceneVariantsCalm : sceneVariants}
-        initial="enter"
-        animate="center"
+        key={sceneKey}
+        variants={variants}
+        initial="initial"
+        animate="animate"
         exit="exit"
-        className={[
-          'relative z-10 w-full',
-          /**
-           * Fixed-height scenes still allow an internal scroll as a safety
-           * valve: on a short phone in landscape, content that would otherwise
-           * be clipped stays reachable instead of disappearing.
-           */
-          mood.scrolls
-            ? ''
-            : 'h-[var(--app-height)] overflow-y-auto overscroll-contain hide-scrollbar',
-        ].join(' ')}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
+        className="relative z-10 w-full min-h-screen"
       >
         {children}
       </motion.main>
     </AnimatePresence>
   );
 }
-
-export default SceneTransition;
