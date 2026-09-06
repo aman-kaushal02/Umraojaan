@@ -1,70 +1,74 @@
 import { motion } from 'framer-motion';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { EASE_SILK } from '../animations/motion';
 
 interface ScrollCueProps {
   label?: string;
   onClick?: () => void;
 }
 
+/**
+ * The forward control: a label over a hairline that a bead of light keeps
+ * travelling down. Restrained enough to sit under a photograph without
+ * competing with it.
+ */
 export function ScrollCue({ label = 'Continue', onClick }: ScrollCueProps) {
   const reducedMotion = usePrefersReducedMotion();
 
-  const chevron = (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-
-  const content = (
+  const body = (
     <>
-      <span className="text-xs tracking-[0.25em] uppercase font-light opacity-90">
+      <span className="font-label text-[0.6rem] uppercase tracking-wide2 text-paper-100/60 transition-colors duration-500 group-hover:text-paper-50">
         {label}
       </span>
-      <motion.div
-        animate={reducedMotion ? {} : { y: [0, 6, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        {chevron}
-      </motion.div>
+
+      <span aria-hidden="true" className="relative block h-12 w-px overflow-hidden bg-white/15">
+        <motion.span
+          className="absolute inset-x-0 h-4 rounded-full"
+          style={{
+            background: 'linear-gradient(to bottom, transparent, rgba(255,226,232,0.95), transparent)',
+          }}
+          initial={{ y: -16 }}
+          animate={reducedMotion ? { y: 16 } : { y: [-16, 48] }}
+          transition={
+            reducedMotion
+              ? { duration: 0 }
+              : { duration: 2.1, repeat: Infinity, ease: EASE_SILK, repeatDelay: 0.35 }
+          }
+        />
+      </span>
     </>
   );
 
-  if (onClick) {
+  const shell = 'group flex flex-col items-center gap-3';
+
+  if (!onClick) {
     return (
-      <motion.button
-        onClick={onClick}
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="flex flex-col items-center gap-3 text-white/70 hover:text-white transition-colors duration-300"
+      <motion.div
+        className={shell}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.1, delay: 0.6 }}
+        role="img"
         aria-label={label}
       >
-        {content}
-      </motion.button>
+        {body}
+      </motion.div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
+    <motion.button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={`${shell} focus:outline-none focus-visible:ring-2 focus-visible:ring-petal-200 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent`}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="flex flex-col items-center gap-3 text-white/70"
-      role="img"
-      aria-label="Scroll to continue"
+      transition={{ duration: 1.1, delay: 0.5, ease: EASE_SILK }}
+      whileHover={reducedMotion ? undefined : { y: -2 }}
+      whileTap={{ scale: 0.97 }}
     >
-      {content}
-    </motion.div>
+      {body}
+    </motion.button>
   );
 }

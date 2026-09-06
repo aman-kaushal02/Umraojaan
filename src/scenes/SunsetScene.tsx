@@ -1,127 +1,123 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { AnimatedText } from '../components/AnimatedText';
+import { RevealText } from '../components/RevealText';
 import { gardenConfig } from '../data/config';
-import { EASE_ENTRANCE } from '../animations/motion';
+import { EASE_SILK, riseIn } from '../animations/motion';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { useIsCompact } from '../hooks/useMediaQuery';
 
+/**
+ * Last light. Petals come loose and drift down through the frame.
+ */
 export function SunsetScene() {
-  return (
-    <div
-      className="relative w-full flex flex-col items-center justify-center px-6 py-16 text-center"
-      style={{
-        minHeight: 'var(--app-height, 100vh)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)',
-      }}
-    >
-      {/* Floating petals animation — luxury version */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(16)].map((_, i) => {
-          const colors = ['#FFB3D9', '#FF6B6B', '#FFC0CB', '#FFDAB9', '#FA8072', '#FFD6E8'];
-          const color = colors[i % colors.length];
-          const delay = i * 1.2;
-          const duration = 12 + Math.random() * 6;
-          const startX = Math.random() * 100;
-          const amplitude = 40 + Math.random() * 60;
+  const reducedMotion = usePrefersReducedMotion();
+  const isCompact = useIsCompact();
 
-          return (
-            <motion.div
+  /* Deterministic per mount so the fall doesn't reshuffle on re-render. */
+  const petals = useMemo(() => {
+    const tints = ['#f79bb0', '#ea6f8c', '#ffc6d3', '#ffe0b8', '#e06a58', '#ffd3e3'];
+    const count = isCompact ? 12 : 20;
+
+    return Array.from({ length: count }, (_, i) => {
+      const seed = (i * 9301 + 49297) % 233280;
+      const rnd = seed / 233280;
+      return {
+        tint: tints[i % tints.length],
+        left: (rnd * 100 + i * 4.5) % 100,
+        size: 9 + ((i * 7) % 11),
+        duration: 13 + ((i * 3) % 7),
+        delay: i * 0.9,
+        sway: 30 + ((i * 13) % 55),
+        spin: 200 + ((i * 37) % 220),
+      };
+    });
+  }, [isCompact]);
+
+  return (
+    <section className="scene-frame">
+      {/* Falling petals. */}
+      {!reducedMotion && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          {petals.map((p, i) => (
+            <motion.span
               key={i}
-              className="absolute rounded-full opacity-30"
+              className="absolute block"
               style={{
-                width: `${8 + Math.random() * 12}px`,
-                height: `${12 + Math.random() * 16}px`,
-                background: `radial-gradient(ellipse, ${color}, transparent)`,
-                left: `${startX}%`,
-                top: '-5%',
-                filter: 'blur(1px)',
+                left: `${p.left}%`,
+                top: '-8%',
+                width: p.size,
+                height: p.size * 1.5,
+                /* A petal silhouette rather than a circle. */
+                borderRadius: '50% 50% 50% 50% / 62% 62% 38% 38%',
+                background: `linear-gradient(150deg, ${p.tint}, ${p.tint}00)`,
+                filter: 'blur(0.4px)',
               }}
               animate={{
-                y: ['0vh', '110vh'],
-                x: [0, Math.sin(i) * amplitude, Math.sin(i + Math.PI) * amplitude, 0],
-                rotate: [0, 180 + i * 30, 360 + i * 60],
-                opacity: [0, 0.4, 0.35, 0.25, 0],
+                y: ['0vh', '112vh'],
+                x: [0, p.sway, -p.sway * 0.6, 0],
+                rotate: [0, p.spin],
+                opacity: [0, 0.55, 0.45, 0],
               }}
               transition={{
-                duration,
-                delay,
+                duration: p.duration,
+                delay: p.delay,
                 repeat: Infinity,
                 ease: 'linear',
+                times: [0, 0.25, 0.7, 1],
               }}
             />
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div className="relative z-10 space-y-12 max-w-2xl">
-        {/* Sunset line */}
-        <motion.div
-          initial={{ opacity: 0, y: -30, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1.6, delay: 0.6, ease: EASE_ENTRANCE }}
-        >
-          <AnimatedText
-            text={gardenConfig.sunset.line}
-            className="text-3xl md:text-4xl font-light text-white text-luxury leading-snug"
-            staggerDelay={0.035}
-            aria-label={gardenConfig.sunset.line}
-          />
-        </motion.div>
+      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
+        <RevealText
+          as="h2"
+          text={gardenConfig.sunset.line}
+          delay={0.5}
+          className="font-display text-[clamp(2rem,7vw,3.2rem)] font-light leading-[1.12] tracking-[-0.025em] text-paper-50"
+        />
 
-        {/* Ornamental separator */}
-        <motion.div
+        <motion.span
+          aria-hidden="true"
+          className="mt-10 block h-px w-32 origin-center bg-gradient-to-r from-transparent via-petal-200/70 to-transparent"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ duration: 1.4, delay: 1.8, ease: EASE_ENTRANCE }}
-          className="flex items-center justify-center gap-3 py-4"
-        >
-          <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/30" />
-          <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-          <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-          <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-          <div className="w-12 h-px bg-gradient-to-l from-transparent to-white/30" />
-        </motion.div>
+          transition={{ duration: 1.4, delay: 1.5, ease: EASE_SILK }}
+        />
 
-        {/* Countdown reminder */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.3, delay: 2.2, ease: EASE_ENTRANCE }}
-          className="inline-block"
+        <motion.p
+          className="mt-9 font-display text-[clamp(1.5rem,5.5vw,2.2rem)] font-light text-paper-50"
+          variants={riseIn}
+          initial="hidden"
+          animate="show"
+          transition={{ delay: 1.8 }}
         >
-          <div className="glass-panel px-12 py-6 rounded-full glow-breathe">
-            <p className="text-xl font-light tracking-widest text-white/95">
-              {gardenConfig.countdown}
-            </p>
-          </div>
-        </motion.div>
+          {gardenConfig.countdown}
+        </motion.p>
 
-        {/* Until next week message */}
-        <motion.div
+        <motion.p
+          className="mt-6 font-label text-[0.6rem] uppercase tracking-wide2 text-paper-100/45"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.4, delay: 2.8 }}
+          transition={{ duration: 1.4, delay: 2.3 }}
         >
-          <p className="text-white/60 text-sm tracking-[0.3em] uppercase">
-            {gardenConfig.sunset.cta}
-          </p>
-        </motion.div>
+          {gardenConfig.sunset.cta}
+        </motion.p>
 
-        {/* Name dedication */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+        <motion.p
+          className="mt-14 font-body text-[clamp(1.3rem,4.5vw,1.75rem)] italic text-paper-100/80"
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.4, delay: 3.4, ease: EASE_ENTRANCE }}
-          className="pt-8"
+          transition={{ duration: 1.5, delay: 2.7, ease: EASE_SILK }}
         >
-          <p className="text-2xl font-light text-white/90 italic tracking-wide">
-            For {gardenConfig.name}
-          </p>
-        </motion.div>
+          For {gardenConfig.name}
+        </motion.p>
       </div>
 
-      {/* Accessibility */}
       <div role="status" aria-live="polite" className="sr-only">
-        Sunset at the garden. {gardenConfig.countdown}. Until next week.
+        Last light. {gardenConfig.countdown}. {gardenConfig.sunset.cta}.
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,134 +1,111 @@
 import { motion } from 'framer-motion';
-import { TulipBud } from '../components/TulipBud';
-import { AnimatedText } from '../components/AnimatedText';
+import { Tulip } from '../components/Tulip';
+import { RevealText } from '../components/RevealText';
 import { CtaButton } from '../components/CtaButton';
 import { gardenConfig } from '../data/config';
-import { cardVariants, staggerContainer, EASE_ENTRANCE } from '../animations/motion';
+import { EASE_SILK, plateIn } from '../animations/motion';
 
 interface GardenSceneProps {
   onContinue: () => void;
 }
 
+/**
+ * Every bud open at once, with the letter laid over the bed.
+ */
 export function GardenScene({ onContinue }: GardenSceneProps) {
+  const count = gardenConfig.blooms.length;
+  const middle = (count - 1) / 2;
+
   return (
-    <div
-      className="relative w-full flex flex-col items-center justify-center px-6 pt-16"
-      style={{
-        minHeight: 'var(--app-height, 100vh)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)',
-      }}
-    >
-      {/* Full garden of bloomed tulips — arranged in elegant arc */}
-      <div className="absolute inset-0 flex items-end justify-center pb-24 pointer-events-none overflow-hidden">
-        <motion.div
-          className="flex gap-6 items-end"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {gardenConfig.blooms.map((bloom, i) => {
-            // Create gentle arc arrangement
-            const middleIndex = (gardenConfig.blooms.length - 1) / 2;
-            const distanceFromMiddle = Math.abs(i - middleIndex);
-            const yOffset = distanceFromMiddle * 20;
-            
+    <section className="scene-frame">
+      {/* The full bed, all six in bloom. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-center"
+      >
+        <div className="flex w-[240%] max-w-6xl items-end justify-center gap-[0.5vw] xs:w-[195%] md:w-[120%]">
+          {gardenConfig.blooms.map((b, i) => {
+            const fromMiddle = Math.abs(i - middle) / middle;
+
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 60 + yOffset, scale: 0.7 }}
-                animate={{ opacity: 1, y: yOffset, scale: 1 }}
-                transition={{
-                  duration: 1.4,
-                  delay: i * 0.2,
-                  ease: EASE_ENTRANCE,
-                }}
+                className="min-w-0 flex-1"
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 0.94 - fromMiddle * 0.24, y: fromMiddle * 22 }}
+                transition={{ duration: 2.1, delay: i * 0.16, ease: EASE_SILK }}
               >
-                <TulipBud
-                  color={bloom.color}
-                  isBloom={true}
-                  size={i === Math.floor(middleIndex) ? 'medium' : 'small'}
+                <Tulip
+                  variant={b.color}
+                  open
+                  instant
+                  delay={0.3 + i * 0.16}
+                  className="h-auto w-full"
                 />
               </motion.div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
 
-      {/* Message card */}
-      <motion.div
-        className="relative z-10 max-w-2xl w-full"
-        variants={cardVariants}
+      {/* The letter. */}
+      <motion.article
+        className="relative z-10 w-full max-w-xl"
+        variants={plateIn}
         initial="hidden"
-        animate="visible"
-        transition={{ delay: 1.5 }}
+        animate="show"
+        transition={{ delay: 1.1 }}
       >
-        <div className="luxury-card p-10 md:p-12 space-y-8">
-          {/* Garden arrival lines */}
-          <div className="space-y-6">
-            {gardenConfig.garden.lines.map((line, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.2, delay: 2 + i * 0.4, ease: EASE_ENTRANCE }}
-              >
-                <AnimatedText
-                  text={line}
-                  className="text-2xl md:text-3xl font-light text-white text-center text-luxury leading-relaxed"
-                  staggerDelay={0.025}
-                  aria-label={line}
-                />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Ornamental divider */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 1.2, delay: 3.5 }}
-            className="gold-divider mx-auto w-32"
+        <div className="rounded-[26px] bg-white/[0.07] p-8 backdrop-blur-2xl ring-1 ring-inset ring-white/20 shadow-[0_40px_90px_-40px_rgba(11,7,16,0.95)] md:p-11">
+          <RevealText
+            as="h2"
+            text={gardenConfig.garden.lines}
+            delay={1.5}
+            stagger={0.34}
+            className="space-y-2 text-center font-display text-[clamp(1.6rem,5.5vw,2.4rem)] font-light leading-[1.14] tracking-[-0.02em] text-paper-50"
           />
 
-          {/* Message paragraphs */}
+          <motion.span
+            aria-hidden="true"
+            className="mx-auto mt-8 block h-px w-28 origin-center bg-gradient-to-r from-transparent via-petal-200/70 to-transparent"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 1.3, delay: 2.6, ease: EASE_SILK }}
+          />
+
           <motion.div
-            className="space-y-5 text-white/80 leading-relaxed"
+            className="mt-8 space-y-4 font-body text-[1.06rem] leading-[1.85] text-paper-100/78"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.4, delay: 4 }}
+            transition={{ duration: 1.5, delay: 2.9 }}
           >
             {gardenConfig.message.paragraphs.map((para, i) => (
-              <p
-                key={i}
-                className={`text-base md:text-lg ${i === 0 ? 'font-medium text-white/95' : ''}`}
-              >
+              <p key={i} className={i === 0 ? 'font-display text-lg text-paper-50' : undefined}>
                 {para}
               </p>
             ))}
 
-            <p className="text-right italic text-white/70 mt-8 text-lg">
+            <p className="pt-3 text-right font-display italic text-paper-100/70">
               {gardenConfig.signature}
             </p>
           </motion.div>
 
-          {/* Continue button */}
           <motion.div
-            className="pt-6 text-center"
+            className="mt-10 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 5 }}
+            transition={{ duration: 1.1, delay: 3.6 }}
           >
-            <CtaButton onClick={onContinue} variant="secondary">
-              Continue
+            <CtaButton onClick={onContinue} variant="glass">
+              One last thing
             </CtaButton>
           </motion.div>
         </div>
-      </motion.div>
+      </motion.article>
 
-      {/* Accessibility */}
       <div role="status" aria-live="polite" className="sr-only">
-        All tulips have bloomed. Reading the garden message.
+        The whole garden is in bloom.
       </div>
-    </div>
+    </section>
   );
 }

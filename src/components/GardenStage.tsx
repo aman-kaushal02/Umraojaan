@@ -1,213 +1,292 @@
-import { useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { Lighting } from '../data/scenes';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { useIsCompact } from '../hooks/useMediaQuery';
+import { EASE_SILK } from '../animations/motion';
 
 interface GardenStageProps {
   lighting: Lighting;
-  showParticles?: boolean;
-  children: React.ReactNode;
+  quiet?: boolean;
+  children: ReactNode;
 }
 
-const lightingScenes = {
+/**
+ * Each hour of the garden is a small lighting rig: a base wash, three
+ * coloured pools placed off-centre, the tint of the airborne pollen, and how
+ * strongly the light shafts read.
+ */
+const RIGS: Record<
+  Lighting,
+  {
+    base: string;
+    pools: Array<{ x: number; y: number; r: number; color: string }>;
+    motes: string;
+    shaft: number;
+    horizon: string;
+  }
+> = {
   dawn: {
-    gradient: 'linear-gradient(165deg, #0f0a1a 0%, #1a0e2e 30%, #2e1645 60%, #4a2c5a 100%)',
-    ambient: 'rgba(138, 85, 156, 0.15)',
-    glow: 'rgba(186, 85, 211, 0.25)',
-    particles: 30,
+    base: 'linear-gradient(178deg, #0b0710 0%, #150d20 38%, #2a1533 68%, #47203c 100%)',
+    pools: [
+      { x: 18, y: 78, r: 62, color: 'rgba(214,75,109,0.30)' },
+      { x: 82, y: 26, r: 52, color: 'rgba(96,63,140,0.32)' },
+      { x: 52, y: 96, r: 70, color: 'rgba(255,150,110,0.16)' },
+    ],
+    motes: 'rgba(255,214,232,0.85)',
+    shaft: 0.1,
+    horizon: 'rgba(255,168,140,0.20)',
   },
   morning: {
-    gradient: 'linear-gradient(165deg, #ffd6e8 0%, #ffc4dd 20%, #a8c8ff 50%, #c4e0ff 100%)',
-    ambient: 'rgba(255, 228, 240, 0.3)',
-    glow: 'rgba(255, 182, 193, 0.4)',
-    particles: 50,
+    base: 'linear-gradient(178deg, #2b1a3a 0%, #5a3352 32%, #a85f68 66%, #e6997f 100%)',
+    pools: [
+      { x: 24, y: 22, r: 58, color: 'rgba(255,201,135,0.38)' },
+      { x: 78, y: 62, r: 64, color: 'rgba(234,111,140,0.30)' },
+      { x: 46, y: 92, r: 66, color: 'rgba(255,240,214,0.18)' },
+    ],
+    motes: 'rgba(255,240,214,0.95)',
+    shaft: 0.3,
+    horizon: 'rgba(255,214,160,0.30)',
   },
   day: {
-    gradient: 'linear-gradient(165deg, #87ceeb 0%, #b4e0ff 30%, #d4f0ff 60%, #b8e6d5 100%)',
-    ambient: 'rgba(255, 255, 255, 0.25)',
-    glow: 'rgba(135, 206, 235, 0.35)',
-    particles: 65,
+    base: 'linear-gradient(178deg, #3b2b52 0%, #6d5580 30%, #b58a92 64%, #f0c4a4 100%)',
+    pools: [
+      { x: 70, y: 16, r: 56, color: 'rgba(255,238,204,0.42)' },
+      { x: 20, y: 58, r: 62, color: 'rgba(150,190,170,0.26)' },
+      { x: 54, y: 96, r: 70, color: 'rgba(255,200,170,0.22)' },
+    ],
+    motes: 'rgba(255,252,240,0.95)',
+    shaft: 0.38,
+    horizon: 'rgba(255,232,196,0.32)',
   },
   afternoon: {
-    gradient: 'linear-gradient(165deg, #ffd89b 0%, #ffb88c 30%, #ffa47a 60%, #ff9a76 100%)',
-    ambient: 'rgba(255, 200, 124, 0.3)',
-    glow: 'rgba(255, 154, 118, 0.4)',
-    particles: 55,
+    base: 'linear-gradient(178deg, #43264a 0%, #7d4358 30%, #c06a5c 66%, #f0a06c 100%)',
+    pools: [
+      { x: 28, y: 20, r: 60, color: 'rgba(255,190,120,0.40)' },
+      { x: 80, y: 54, r: 58, color: 'rgba(220,90,110,0.30)' },
+      { x: 50, y: 94, r: 68, color: 'rgba(255,214,160,0.22)' },
+    ],
+    motes: 'rgba(255,230,196,0.95)',
+    shaft: 0.34,
+    horizon: 'rgba(255,182,120,0.34)',
   },
   dusk: {
-    gradient: 'linear-gradient(165deg, #8e44ad 0%, #c06c84 30%, #f67280 60%, #f8b195 100%)',
-    ambient: 'rgba(198, 108, 132, 0.2)',
-    glow: 'rgba(246, 114, 128, 0.35)',
-    particles: 40,
+    base: 'linear-gradient(178deg, #150d20 0%, #3a1c3e 34%, #7c3352 68%, #c05a5e 100%)',
+    pools: [
+      { x: 76, y: 82, r: 66, color: 'rgba(255,130,110,0.30)' },
+      { x: 20, y: 34, r: 56, color: 'rgba(110,60,150,0.34)' },
+      { x: 50, y: 100, r: 72, color: 'rgba(255,170,150,0.18)' },
+    ],
+    motes: 'rgba(255,220,232,0.9)',
+    shaft: 0.16,
+    horizon: 'rgba(255,150,130,0.26)',
   },
 };
 
-export function GardenStage({
-  lighting,
-  showParticles = true,
-  children,
-}: GardenStageProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export function GardenStage({ lighting, quiet = false, children }: GardenStageProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reducedMotion = usePrefersReducedMotion();
-  const scene = lightingScenes[lighting];
+  const isCompact = useIsCompact();
+  const rig = RIGS[lighting];
 
-  // Ambient glow positions — deterministic per lighting
-  const glowOrbs = useMemo(() => {
-    const seeds = { dawn: [0.3, 0.7], morning: [0.2, 0.8], day: [0.5, 0.5], afternoon: [0.6, 0.4], dusk: [0.7, 0.6] };
-    const [x, y] = seeds[lighting] || [0.5, 0.5];
-    return [
-      { x: x * 100, y: y * 100, size: 45, opacity: 0.6 },
-      { x: (1 - x) * 100, y: (1 - y) * 100, size: 35, opacity: 0.4 },
-    ];
-  }, [lighting]);
+  /* Pollen drifting through the light. Budget scales with screen size. */
+  const moteCount = useMemo(() => {
+    if (quiet) return isCompact ? 14 : 26;
+    return isCompact ? 26 : 52;
+  }, [isCompact, quiet]);
 
   useEffect(() => {
-    if (!showParticles || reducedMotion || !canvasRef.current) return;
-
     const canvas = canvasRef.current;
+    if (!canvas || reducedMotion) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = canvas.offsetWidth * dpr;
-    canvas.height = canvas.offsetHeight * dpr;
-    ctx.scale(dpr, dpr);
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
 
-    const w = canvas.offsetWidth;
-    const h = canvas.offsetHeight;
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.offsetWidth;
+      h = canvas.offsetHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
 
-    interface Particle {
+    interface Mote {
       x: number;
       y: number;
       vx: number;
       vy: number;
-      radius: number;
-      alpha: number;
-      twinkle: number;
+      r: number;
+      a: number;
+      phase: number;
+      drift: number;
     }
 
-    const particles: Particle[] = [];
-    const count = scene.particles;
+    const motes: Mote[] = Array.from({ length: moteCount }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.12,
+      vy: -(Math.random() * 0.16 + 0.05),
+      r: Math.random() * 1.9 + 0.5,
+      a: Math.random() * 0.5 + 0.18,
+      phase: Math.random() * Math.PI * 2,
+      drift: Math.random() * 0.5 + 0.25,
+    }));
 
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() * 0.6) + 0.3,
-        radius: Math.random() * 2.5 + 0.8,
-        alpha: Math.random() * 0.6 + 0.2,
-        twinkle: Math.random() * Math.PI * 2,
-      });
-    }
+    let raf = 0;
+    let last = performance.now();
+    let running = true;
 
-    let animationId: number;
-    let lastTime = performance.now();
-
-    const render = (time: number) => {
-      const delta = Math.min((time - lastTime) / 16.667, 2);
-      lastTime = time;
+    const frame = (now: number) => {
+      if (!running) return;
+      const dt = Math.min((now - last) / 16.667, 2.5);
+      last = now;
 
       ctx.clearRect(0, 0, w, h);
 
-      particles.forEach((p) => {
-        p.x += p.vx * delta;
-        p.y += p.vy * delta;
-        p.twinkle += 0.02 * delta;
+      for (const m of motes) {
+        m.phase += 0.012 * dt;
+        m.x += (m.vx + Math.sin(m.phase) * 0.14 * m.drift) * dt;
+        m.y += m.vy * dt;
 
-        if (p.y > h + 20) {
-          p.y = -20;
-          p.x = Math.random() * w;
+        if (m.y < -12) {
+          m.y = h + 12;
+          m.x = Math.random() * w;
         }
-        if (p.x < -20 || p.x > w + 20) {
-          p.x = Math.random() * w;
-        }
+        if (m.x < -12) m.x = w + 12;
+        if (m.x > w + 12) m.x = -12;
 
-        const twinkleAlpha = p.alpha * (0.5 + Math.sin(p.twinkle) * 0.5);
+        const twinkle = m.a * (0.45 + Math.sin(m.phase * 1.7) * 0.55);
 
-        // Particle core
+        const grad = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 5);
+        grad.addColorStop(0, rig.motes.replace(/[\d.]+\)$/, `${twinkle.toFixed(3)})`));
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${twinkleAlpha})`;
+        ctx.arc(m.x, m.y, m.r * 5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Soft glow
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 4);
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${twinkleAlpha * 0.4})`);
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = rig.motes.replace(/[\d.]+\)$/, `${Math.min(1, twinkle * 1.6).toFixed(3)})`);
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius * 4, 0, Math.PI * 2);
+        ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
         ctx.fill();
-      });
+      }
 
-      animationId = requestAnimationFrame(render);
+      raf = requestAnimationFrame(frame);
     };
 
-    animationId = requestAnimationFrame(render);
+    raf = requestAnimationFrame(frame);
 
-    return () => cancelAnimationFrame(animationId);
-  }, [lighting, showParticles, reducedMotion, scene.particles]);
+    /* Stop burning frames when the tab isn't visible. */
+    const onVisibility = () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(raf);
+      } else if (!running) {
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    };
+
+    window.addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [lighting, moteCount, reducedMotion, rig.motes]);
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden">
-      {/* Animated gradient background */}
-      <AnimatePresence mode="wait">
+    <div className="relative w-full">
+      {/* Fixed atmosphere. Scenes scroll over the top of it. */}
+      <div aria-hidden="true" className="fixed inset-0 z-0 overflow-hidden">
+        {/* Base wash, cross-dissolving between hours. */}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={lighting}
+            className="absolute inset-0"
+            style={{ background: rig.base }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.2, ease: EASE_SILK }}
+          />
+        </AnimatePresence>
+
+        {/* Coloured pools, slowly drifting so the sky is never static. */}
+        {rig.pools.map((p, i) => (
+          <motion.div
+            key={`${lighting}-pool-${i}`}
+            className={reducedMotion ? '' : 'animate-drift-mesh'}
+            style={{
+              position: 'absolute',
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: `${p.r}vmax`,
+              height: `${p.r}vmax`,
+              marginLeft: `-${p.r / 2}vmax`,
+              marginTop: `-${p.r / 2}vmax`,
+              background: `radial-gradient(circle, ${p.color}, transparent 68%)`,
+              filter: 'blur(48px)',
+              animationDelay: `${i * -7}s`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 2.6, ease: EASE_SILK, delay: i * 0.15 }}
+          />
+        ))}
+
+        {/* Light shafts raking down from the top-left. */}
+        {!reducedMotion && rig.shaft > 0.05 && (
+          <motion.div
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: rig.shaft }}
+            transition={{ duration: 3, ease: EASE_SILK }}
+            style={{
+              background:
+                'repeating-linear-gradient(102deg, rgba(255,244,222,0.16) 0px, rgba(255,244,222,0.16) 2px, transparent 2px, transparent 58px)',
+              maskImage:
+                'radial-gradient(70% 90% at 22% -10%, black 0%, transparent 72%)',
+              WebkitMaskImage:
+                'radial-gradient(70% 90% at 22% -10%, black 0%, transparent 72%)',
+            }}
+          />
+        )}
+
+        {/* Warm ground haze along the horizon. */}
         <motion.div
-          key={lighting}
-          className="absolute inset-0"
-          style={{ background: scene.gradient }}
+          key={`${lighting}-horizon`}
+          className="absolute inset-x-0 bottom-0 h-[45vh]"
+          style={{
+            background: `radial-gradient(120% 100% at 50% 118%, ${rig.horizon}, transparent 70%)`,
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 2.5, ease: [0.19, 1.0, 0.22, 1.0] }}
+          transition={{ duration: 2.4, ease: EASE_SILK }}
         />
-      </AnimatePresence>
 
-      {/* Ambient glow orbs */}
-      {glowOrbs.map((orb, i) => (
-        <motion.div
-          key={`${lighting}-${i}`}
-          className="absolute ambient-glow"
-          style={{
-            left: `${orb.x}%`,
-            top: `${orb.y}%`,
-            width: `${orb.size}vmin`,
-            height: `${orb.size}vmin`,
-            background: scene.glow,
-            opacity: orb.opacity,
-          }}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: orb.opacity }}
-          transition={{ duration: 3, ease: 'easeOut' }}
-        />
-      ))}
-
-      {/* Subtle vignette */}
-      <div className="vignette" />
-
-      {/* Floating atmospheric mist */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse at 50% 80%, ${scene.ambient}, transparent 65%)`,
-        }}
-      />
-
-      {/* Particle canvas */}
-      {showParticles && !reducedMotion && (
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full pointer-events-none opacity-90"
-          style={{ mixBlendMode: 'screen' }}
-        />
-      )}
-
-      {/* Content layer. Scenes own their own padding so nothing is
-          double-inset, and tall scenes are free to grow and scroll. */}
-      <div className="relative z-10 w-full flex items-stretch justify-center">
-        {children}
+        {/* Airborne pollen. */}
+        {!reducedMotion && (
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 h-full w-full"
+            style={{ mixBlendMode: 'screen' }}
+          />
+        )}
       </div>
+
+      {/* Scenes own their own padding and height. */}
+      <div className="relative z-10 w-full">{children}</div>
     </div>
   );
 }
