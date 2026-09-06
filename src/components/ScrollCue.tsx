@@ -9,61 +9,62 @@ interface ScrollCueProps {
 export function ScrollCue({ label = 'Continue', onClick }: ScrollCueProps) {
   const reducedMotion = usePrefersReducedMotion();
 
+  const chevron = (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+
+  const content = (
+    <>
+      <span className="text-xs tracking-[0.25em] uppercase font-light opacity-90">
+        {label}
+      </span>
+      <motion.div
+        animate={reducedMotion ? {} : { y: [0, 6, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {chevron}
+      </motion.div>
+    </>
+  );
+
   if (onClick) {
     return (
       <motion.button
         onClick={onClick}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.6 }}
-        className="flex flex-col items-center gap-2 text-white/70 hover:text-white transition-colors"
+        transition={{ delay: 1, duration: 1 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex flex-col items-center gap-3 text-white/70 hover:text-white transition-colors duration-300"
         aria-label={label}
       >
-        <span className="text-xs uppercase tracking-widest">{label}</span>
-        <motion.svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          animate={reducedMotion ? {} : { y: [0, 4, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          aria-hidden="true"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </motion.svg>
+        {content}
       </motion.button>
     );
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.8, duration: 0.6 }}
-      className="flex flex-col items-center gap-2 text-white/70"
+      transition={{ delay: 1, duration: 1 }}
+      className="flex flex-col items-center gap-3 text-white/70"
       role="img"
       aria-label="Scroll to continue"
     >
-      <span className="text-xs uppercase tracking-widest">{label}</span>
-      <motion.svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        animate={reducedMotion ? {} : { y: [0, 4, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-        aria-hidden="true"
-      >
-        <polyline points="6 9 12 15 18 9" />
-      </motion.svg>
+      {content}
     </motion.div>
   );
 }

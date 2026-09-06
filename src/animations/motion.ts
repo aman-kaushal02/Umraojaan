@@ -1,84 +1,152 @@
-import type { Transition, Variants } from 'framer-motion';
-
-/* Shared curves, so every scene moves with the same hand. */
-export const EASE_GATE = [0.22, 1, 0.36, 1] as const;
-export const EASE_CUT = [0.85, 0, 0.15, 1] as const;
-
-export const springSoft: Transition = {
-  type: 'spring',
-  stiffness: 150,
-  damping: 21,
-  mass: 0.9,
-};
-
-export const tweenGate = (duration = 0.9, delay = 0): Transition => ({
-  duration,
-  delay,
-  ease: EASE_GATE,
-});
+import type { Variants } from 'framer-motion';
 
 /**
- * Scene changes are cut on a dissolve: the outgoing scene loses focus and
- * brightness as the lamp swings away, the incoming one resolves as the gate
- * settles.
+ * Premium easing curves — crafted for luxury feel.
+ * Smooth, confident, never rushed.
  */
-export const sceneVariants: Variants = {
-  enter: (direction: number) => ({
+export const EASE_PREMIUM = [0.25, 0.1, 0.25, 1.0]; // cubic-bezier
+export const EASE_SILK = [0.19, 1.0, 0.22, 1.0];
+export const EASE_ENTRANCE = [0.16, 1.0, 0.3, 1.0];
+export const EASE_EXIT = [0.7, 0.0, 0.84, 0.0];
+
+/**
+ * Staggered reveal for luxury typography.
+ * Each word arrives with intention, never rushed.
+ */
+export const textRevealVariants: Variants = {
+  hidden: {
     opacity: 0,
-    scale: direction > 0 ? 1.035 : 0.985,
-    filter: 'blur(12px) brightness(1.5)',
-  }),
-  center: {
-    opacity: 1,
-    scale: 1,
-    filter: 'blur(0px) brightness(1)',
-    transition: { duration: 1.05, ease: EASE_GATE },
+    y: 40,
+    filter: 'blur(12px)',
+    scale: 0.96,
   },
-  exit: (direction: number) => ({
-    opacity: 0,
-    scale: direction > 0 ? 0.99 : 1.025,
-    filter: 'blur(9px) brightness(0.6)',
-    transition: { duration: 0.6, ease: EASE_CUT },
-  }),
-};
-
-/** Reduced-motion counterpart: a plain, quick cross-fade. */
-export const sceneVariantsCalm: Variants = {
-  enter: { opacity: 0 },
-  center: { opacity: 1, transition: { duration: 0.28, ease: 'linear' } },
-  exit: { opacity: 0, transition: { duration: 0.2, ease: 'linear' } },
-};
-
-/** Staggered container for credit rolls and lists of frames. */
-export const staggerParent = (stagger = 0.14, delay = 0.1): Variants => ({
-  hidden: {},
-  show: {
-    transition: { staggerChildren: stagger, delayChildren: delay },
-  },
-});
-
-export const riseChild: Variants = {
-  hidden: { opacity: 0, y: 18, filter: 'blur(6px)' },
-  show: {
+  visible: {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
-    transition: { duration: 1, ease: EASE_GATE },
+    scale: 1,
+    transition: {
+      duration: 1.2,
+      ease: EASE_ENTRANCE,
+    },
   },
 };
 
-export const calmChild: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { duration: 0.3 } },
+/**
+ * Scene transitions — cross-dissolve with depth.
+ */
+export const sceneTransitionVariants: Variants = {
+  initial: {
+    opacity: 0,
+    scale: 1.03,
+    filter: 'blur(20px)',
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 1.4,
+      ease: EASE_SILK,
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.97,
+    filter: 'blur(20px)',
+    transition: {
+      duration: 0.9,
+      ease: EASE_EXIT,
+    },
+  },
 };
 
-/** A print coming up in the developer: dark and soft, then sharp. */
-export const developIn: Variants = {
-  hidden: { opacity: 0, filter: 'blur(14px) brightness(0.3) contrast(0.7)', scale: 1.06 },
-  show: {
+/**
+ * Floating animation for ambient elements.
+ */
+export const floatVariants: Variants = {
+  animate: {
+    y: [0, -12, 0],
+    x: [0, 6, 0],
+    transition: {
+      duration: 6,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+/**
+ * Glow pulse for interactive elements.
+ */
+export const glowVariants: Variants = {
+  idle: {
+    boxShadow: '0 0 20px rgba(255, 182, 193, 0.3)',
+  },
+  hover: {
+    boxShadow: '0 0 40px rgba(255, 182, 193, 0.6), 0 0 80px rgba(255, 192, 203, 0.3)',
+    transition: {
+      duration: 0.6,
+      ease: 'easeOut',
+    },
+  },
+};
+
+/**
+ * Premium button interaction.
+ */
+export const buttonVariants: Variants = {
+  initial: { scale: 1 },
+  hover: {
+    scale: 1.04,
+    y: -2,
+    transition: {
+      duration: 0.4,
+      ease: EASE_SILK,
+    },
+  },
+  tap: {
+    scale: 0.98,
+    y: 0,
+    transition: {
+      duration: 0.15,
+      ease: 'easeOut',
+    },
+  },
+};
+
+/**
+ * Card entrance with depth.
+ */
+export const cardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 60,
+    rotateX: 15,
+    scale: 0.94,
+  },
+  visible: {
     opacity: 1,
-    filter: 'blur(0px) brightness(1) contrast(1)',
+    y: 0,
+    rotateX: 0,
     scale: 1,
-    transition: { duration: 1.7, ease: EASE_GATE },
+    transition: {
+      duration: 1.2,
+      ease: EASE_ENTRANCE,
+    },
+  },
+};
+
+/**
+ * Stagger container for sequential reveals.
+ */
+export const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.2,
+    },
   },
 };

@@ -1,32 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Film } from 'lucide-react';
 
 interface SafeImageProps {
   src?: string;
   alt: string;
   className?: string;
-  /** Shown inside the placeholder when the frame is missing. */
   fallbackLabel?: string;
-  /** Eager-load the hero frame of a scene; everything else stays lazy. */
   priority?: boolean;
 }
 
-/**
- * A frame that can't break the projection.
- *
- * No `src`, a typo'd path, a 404 or an unsupported format all resolve to the
- * same unexposed frame, so an unfinished folder never turns into a broken-image
- * icon in the middle of the screening.
- */
 export function SafeImage({
   src,
   alt,
   className = '',
-  fallbackLabel = 'frame not exposed',
+  fallbackLabel = 'Image not available',
   priority = false,
 }: SafeImageProps) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>(
-    src ? 'loading' : 'failed',
+    src ? 'loading' : 'failed'
   );
 
   useEffect(() => {
@@ -38,27 +28,33 @@ export function SafeImage({
       <div
         role="img"
         aria-label={alt}
-        className={`celluloid relative flex flex-col items-center justify-center gap-3 overflow-hidden ${className}`}
+        className={`relative flex flex-col items-center justify-center gap-4 overflow-hidden bg-white/5 backdrop-blur-sm ${className}`}
       >
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-70"
-          style={{
-            background:
-              'radial-gradient(circle at 42% 34%, rgba(227,185,114,0.14), transparent 58%)',
-          }}
-        />
-        <Film aria-hidden="true" className="relative h-6 w-6 text-brass-400/50" strokeWidth={1.1} />
-        <span className="slug relative px-6 text-center text-brass-300/50">{fallbackLabel}</span>
+        <div className="absolute inset-0 opacity-30">
+          <svg className="w-full h-full" viewBox="0 0 100 100">
+            <defs>
+              <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5" opacity="0.1"/>
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
+        <svg className="relative w-16 h-16 text-white/30" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="6" y="6" width="36" height="36" rx="2" />
+          <circle cx="17" cy="17" r="3" />
+          <path d="M6 30 L18 18 L26 26 L42 10 L42 42 L6 42 Z" />
+        </svg>
+        <span className="relative text-sm text-white/40 tracking-wide">{fallbackLabel}</span>
       </div>
     );
   }
 
   return (
-    <div className={`celluloid relative overflow-hidden ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
       {status === 'loading' && (
-        <div aria-hidden="true" className="absolute inset-0 celluloid">
-          <div className="absolute inset-0 animate-beam-breathe bg-gradient-to-b from-transparent via-beam-200/10 to-transparent motion-reduce:animate-none" />
+        <div className="absolute inset-0 bg-white/5 backdrop-blur-sm">
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/10 to-transparent" />
         </div>
       )}
       <img
@@ -70,15 +66,12 @@ export function SafeImage({
         onLoad={() => setStatus('ready')}
         onError={() => setStatus('failed')}
         className={[
-          /* Comes up like a print in the developer: dark and soft, then sharp. */
-          'h-full w-full object-cover transition-[opacity,filter,transform] duration-[1600ms] ease-gate',
+          'w-full h-full object-cover transition-all duration-[1800ms]',
           status === 'ready'
-            ? 'opacity-100 blur-0 scale-100 brightness-100 contrast-100'
-            : 'opacity-0 blur-lg scale-[1.06] brightness-[0.35] contrast-[0.7]',
+            ? 'opacity-100 blur-0 scale-100'
+            : 'opacity-0 blur-lg scale-105',
         ].join(' ')}
       />
     </div>
   );
 }
-
-export default SafeImage;
