@@ -85,19 +85,29 @@ export function MemoryCard({ memory, index, total, isLast, reducedMotion, onClos
       >
         {/* ---------------- plate ---------------- */}
         <div className="memory-card__plate">
+          {/* The photo itself is shown whole, never cropped. These are tall
+              9:16 portraits, so a contained photo always leaves space around
+              it — filled with a blurred, dimmed copy of the same image rather
+              than dead letterbox bars. */}
+          <img
+            src={memory.photo}
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="async"
+            className="memory-card__fill"
+          />
           <motion.img
             src={memory.photo}
             alt=""
             loading="eager"
             decoding="async"
-            /* Sources are portrait phone photos — biasing the crop upward
-               keeps her face in frame in a landscape plate. */
-            className="absolute inset-0 h-full w-full object-cover [object-position:50%_28%]"
-            initial={{ scale: 1.14, opacity: 0 }}
+            className="memory-card__photo"
+            initial={{ scale: 1.06, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
               opacity: { duration: reducedMotion ? 0.2 : 1.2 },
-              scale: { duration: reducedMotion ? 0.2 : 14, ease: 'linear' },
+              scale: { duration: reducedMotion ? 0.2 : 16, ease: 'linear' },
             }}
           />
           <span className="memory-card__leak" aria-hidden="true" />

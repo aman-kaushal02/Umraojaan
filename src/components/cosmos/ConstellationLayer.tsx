@@ -167,7 +167,7 @@ export function ConstellationLayer({
   const drawDelay = (order: number) => 0.35 + (order / DRAW_GROUPS) * 2.1;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-20">
+    <div className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
       {/* ---- constellation lines ---- */}
       <svg
         className="absolute inset-0 h-full w-full"

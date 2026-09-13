@@ -14,7 +14,11 @@ interface Props {
 
 export function Atmosphere({ warmth = 0, reducedMotion = false }: Props) {
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[44]">
+    /* overflow-hidden is load-bearing: the aurora below is intentionally
+       wider than the screen, and a fixed element escapes body's overflow
+       clip. Without this, mobile browsers widen the layout viewport to fit
+       it and the whole site renders zoomed out. */
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[44] overflow-hidden">
       {/* Aurora — two slow, offset ribbons low in the frame. */}
       <motion.div
         className="absolute inset-x-[-20%] bottom-[-14%] h-[52%]"

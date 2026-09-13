@@ -57,19 +57,19 @@ export function Overture({ onEnter, reducedMotion }: Props) {
           delay={0.95}
           stagger={0.07}
           duration={1.5}
-          className="title-cosmic mt-9"
+          className="title-cosmic mt-6 tall:mt-9"
         />
 
         <motion.span
           aria-hidden="true"
-          className="rule-cosmic mt-9"
+          className="rule-cosmic mt-6 tall:mt-9"
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
           transition={t(1.9, 1.8)}
         />
 
         <motion.p
-          className="mt-8 font-body text-[clamp(1.05rem,4.2vw,1.4rem)] font-light leading-[1.75] text-paper-100/80"
+          className="mt-6 tall:mt-8 font-body text-[clamp(1rem,4.2vw,1.4rem)] font-light leading-[1.75] text-paper-100/80"
           initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={t(2.1, 1.6)}
@@ -78,7 +78,7 @@ export function Overture({ onEnter, reducedMotion }: Props) {
         </motion.p>
 
         <motion.p
-          className="mt-5 max-w-[32rem] font-body text-[clamp(0.92rem,3.5vw,1.05rem)] italic leading-[1.85] text-paper-100/50"
+          className="mt-4 tall:mt-5 max-w-[32rem] font-body text-[clamp(0.92rem,3.5vw,1.05rem)] italic leading-[1.85] text-paper-100/50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={t(2.6, 1.8)}
@@ -86,14 +86,14 @@ export function Overture({ onEnter, reducedMotion }: Props) {
           {cosmos.overture.line}
         </motion.p>
 
-        <div className="mt-12">
+        <div className="mt-8 tall:mt-12">
           <StarButton onClick={onEnter} delay={3.1} reducedMotion={reducedMotion}>
             {cosmos.overture.cta}
           </StarButton>
         </div>
 
         <motion.p
-          className="mt-7 font-label text-[0.55rem] uppercase tracking-[0.4em] text-paper-100/25"
+          className="mt-5 tall:mt-7 font-label text-[0.55rem] uppercase tracking-[0.4em] text-paper-100/25"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={t(3.9, 1.4)}
