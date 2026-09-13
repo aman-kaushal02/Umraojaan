@@ -4,10 +4,12 @@ dist-ssr
 .verify
 *.local
 *.tsbuildinfo
-
 .DS_Store
 Thumbs.db
-
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Untouched photo originals. Kept on disk but outside public/, so no build
+# ever copies them — the nine actually in use live in public/stars/.
+_originals/

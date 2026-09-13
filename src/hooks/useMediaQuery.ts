@@ -23,18 +23,3 @@ export function useMediaQuery(query: string): boolean {
 
   return matches;
 }
-
-/** True when the device has no real hover (phones, tablets). */
-export function useIsTouch(): boolean {
-  return useMediaQuery('(hover: none), (pointer: coarse)');
-}
-
-/** True on phone-sized viewports. Drives particle budgets and effect tiers. */
-export function useIsCompact(): boolean {
-  return useMediaQuery('(max-width: 767px)');
-}
-
-/** True when a precise pointer is available — enables cursor-follow effects. */
-export function useHasFinePointer(): boolean {
-  return useMediaQuery('(hover: hover) and (pointer: fine)');
-}

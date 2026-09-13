@@ -45,6 +45,20 @@ export default {
           100: '#fdf8f1',
           200: '#f4ece0',
         },
+        /* Week four — deep sky. */
+        void: {
+          950: '#020309',
+          900: '#05060f',
+          800: '#0b0a24',
+          700: '#16143a',
+          600: '#221f52',
+        },
+        star: {
+          gold: '#f4e4c1',
+          ice: '#e8f4f8',
+          cyan: '#7dd3ff',
+          violet: '#b9a5ff',
+        },
       },
       fontFamily: {
         display: ['Fraunces', 'Georgia', 'serif'],
@@ -66,6 +80,9 @@ export default {
           '0 1px 0 rgba(255,255,255,0.28) inset, 0 30px 60px -28px rgba(11,7,16,0.9), 0 2px 10px -4px rgba(11,7,16,0.6)',
         bloom: '0 0 60px -12px rgba(234,111,140,0.5), 0 0 140px -40px rgba(234,111,140,0.35)',
         rim: '0 0 0 1px rgba(255,255,255,0.14), 0 0 0 4px rgba(255,255,255,0.04)',
+        /* A card floating in front of a night sky. */
+        deep:
+          '0 1px 0 rgba(255,255,255,0.1) inset, 0 40px 90px -34px rgba(2,3,9,0.96), 0 0 0 1px rgba(190,205,255,0.09)',
       },
       transitionTimingFunction: {
         silk: 'cubic-bezier(0.16, 1, 0.3, 1)',

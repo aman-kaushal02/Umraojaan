@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "An interactive digital love letter — a cinematic birthday experience.",
+  "description": "Nine Lights — nine stars in a night sky, one for every day left.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -13,8 +13,6 @@
   },
   "dependencies": {
     "framer-motion": "11.18.2",
-    "gsap": "3.12.7",
-    "lucide-react": "0.474.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
